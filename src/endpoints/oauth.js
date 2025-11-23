@@ -467,57 +467,36 @@ router.get('/linuxdo/callback', async (request, response) => {
 
         let userData;
 
-        // 调试日志：输出 token 响应
-        console.log('Linux.do OAuth token 响应:', {
-            has_id_token: !!tokenData.id_token,
-            has_access_token: !!tokenData.access_token,
-            token_type: tokenData.token_type,
-        });
-
-        // OpenID Connect返回id_token，优先使用它（避免Cloudflare拦截userinfo端点）
+        // OpenID Connect返回id_token，优先使用它
         if (tokenData.id_token) {
             const decodedToken = decodeJWT(tokenData.id_token);
             if (decodedToken) {
-                console.log('从 id_token 解码的数据:', JSON.stringify(decodedToken, null, 2));
                 userData = decodedToken;
             }
         }
 
-        // Linux.do 的特殊情况：access_token 本身可能就是 JWT
-        // 但需要验证是否包含完整的用户信息（username/email），而不仅仅是认证信息（sub）
-        let jwtUserData = null;
+        // access_token 可能是 JWT，检查是否包含完整用户信息
         if (!userData && tokenData.access_token && tokenData.access_token.split('.').length === 3) {
             const decodedToken = decodeJWT(tokenData.access_token);
             if (decodedToken && decodedToken.sub) {
-                console.log('从 access_token 解码的数据:', JSON.stringify(decodedToken, null, 2));
-                // 只有当 JWT 包含实际用户信息（username/email/name）时才使用
+                // 只有当 JWT 包含实际用户信息时才使用
                 if (decodedToken.username || decodedToken.email || decodedToken.name || decodedToken.preferred_username) {
-                    console.log('✓ JWT 包含用户信息，直接使用');
                     userData = decodedToken;
-                } else {
-                    console.log('⚠ JWT 只包含认证信息，需要调用 API 获取用户详情');
-                    jwtUserData = decodedToken; // 保存 JWT 数据供后续使用
                 }
             }
         }
 
-        // 如果没有获取到完整用户信息，尝试使用 userinfo 端点
+        // 如果没有获取到完整用户信息，调用 userinfo 端点
         if (!userData && tokenData.access_token) {
-            console.log('🔍 开始尝试通过 API 端点获取用户信息...');
-
-            // 尝试多个可能的端点
             const endpoints = [
                 oauthConfig.linuxdo.userInfoUrl,
-                'https://connect.linux.do/api/user',
-                'https://connect.linux.do/session/current.json',
-                'https://connect.linux.do/users/me.json',
+                'https://connect.linux.do/api/user'
             ];
 
             for (const endpoint of endpoints) {
-                if (userData) break; // 如果已经获取到数据，跳出循环
+                if (userData) break;
 
                 try {
-                    console.log(`\n📡 尝试访问端点: ${endpoint}`);
                     const userResponse = await fetch(endpoint, {
                         headers: {
                             'Authorization': `Bearer ${String(tokenData.access_token)}`,
@@ -526,40 +505,21 @@ router.get('/linuxdo/callback', async (request, response) => {
                         },
                     });
 
-                    console.log(`   响应状态: ${userResponse.status} ${userResponse.statusText}`);
-
-                    // 检查用户信息响应状态
                     if (userResponse.ok) {
                         const contentType = userResponse.headers.get('content-type');
-                        console.log(`   Content-Type: ${contentType}`);
-
                         if (contentType && contentType.includes('application/json')) {
                             /** @type {any} */
                             const data = await userResponse.json();
-                            console.log(`   ✅ 获取到 JSON 数据:`, JSON.stringify(data, null, 2));
 
-                            // 检查数据是否包含有效的用户信息（必须有 username 或 id）
                             if (data && (data.username || data.id)) {
                                 userData = data;
-                                console.log(`   🎉 成功！从端点 ${endpoint} 获取到完整用户数据`);
                                 break;
-                            } else {
-                                console.log(`   ⚠ 数据不完整，缺少 username 或 id 字段`);
                             }
-                        } else {
-                            console.log(`   ❌ 返回的不是 JSON 格式`);
                         }
-                    } else {
-                        const errorText = await userResponse.text();
-                        console.error(`   ❌ 请求失败:`, errorText.substring(0, 200));
                     }
                 } catch (error) {
-                    console.error(`   ❌ 访问端点时出错:`, error.message);
+                    console.error('Error fetching user info from', endpoint, ':', error.message);
                 }
-            }
-
-            if (!userData) {
-                console.log('\n❌ 所有端点尝试完毕，未能获取用户信息');
             }
         }
 
@@ -567,11 +527,6 @@ router.get('/linuxdo/callback', async (request, response) => {
             console.error('Linux.do OAuth error: Failed to get user information');
             return response.status(400).send('Failed to get user information');
         }
-
-        // 调试日志：输出完整的原始用户数据
-        console.log('========== Linux.do OAuth 调试信息 ==========');
-        console.log('完整的原始用户数据:', JSON.stringify(userData, null, 2));
-        console.log('==========================================');
 
         // 处理OAuth登录
         await handleOAuthLogin(request, response, 'linuxdo', userData);
@@ -605,32 +560,24 @@ async function handleOAuthLogin(request, response, provider, userData) {
                     : null;
                 break;
             case 'linuxdo':
-                // Linux.do 官方返回格式：{ id, username, name, email, avatar_url, ... }
+                // Linux.do 返回格式：{ id, username, name, email, avatar_url, ... }
                 // 可能的嵌套结构：{user: {...}} 或 {current_user: {...}}
                 const userInfo = userData.user || userData.current_user || userData;
 
-                // 提取用户ID (优先使用 id，其次 sub)
+                // 提取用户ID
                 const rawUserId = userInfo.id || userData.id || userInfo.sub || userData.sub;
                 userId = `linuxdo_${rawUserId}`;
 
-                // 提取用户名 - 根据官方文档，应该返回 username 字段
-                const rawUsername = userInfo.username || userData.username ||
-                                   userInfo.preferred_username || userData.preferred_username ||
-                                   userInfo.name || userData.name;
-
-                if (!rawUsername) {
-                    console.error('❌ 警告：未能从 Linux.do 获取用户名，使用默认格式');
-                    console.error('userData 内容:', JSON.stringify(userData, null, 2));
-                    username = `linuxdo_user_${rawUserId}`;
-                } else {
-                    username = rawUsername;
-                    console.log(`✅ 成功获取 Linux.do 用户名: ${username}`);
-                }
+                // 提取用户名
+                username = userInfo.username || userData.username ||
+                          userInfo.preferred_username || userData.preferred_username ||
+                          userInfo.name || userData.name ||
+                          `linuxdo_user_${rawUserId}`;
 
                 // 提取邮箱
                 email = userInfo.email || userData.email;
 
-                // 提取头像 - 官方返回 avatar_url
+                // 提取头像
                 avatar = userInfo.avatar_url || userData.avatar_url ||
                         userInfo.picture || userData.picture ||
                         userInfo.avatar_template || userData.avatar_template;
@@ -639,13 +586,6 @@ async function handleOAuthLogin(request, response, provider, userData) {
                 if (avatar && avatar.includes('{size}')) {
                     avatar = processDiscourseAvatarTemplate(avatar);
                 }
-
-                console.log('======= Linux.do 用户信息提取结果 =======');
-                console.log('用户ID (userId):', userId);
-                console.log('用户名 (username):', username);
-                console.log('邮箱 (email):', email || '(未提供)');
-                console.log('头像 (avatar):', avatar || '(未提供)');
-                console.log('========================================');
                 break;
             default:
                 throw new Error('Unknown OAuth provider');
@@ -696,10 +636,9 @@ async function handleOAuthLogin(request, response, provider, userData) {
             await storage.setItem(toKey(normalizedHandle), user);
             console.log(`Created new user via ${provider} OAuth:`, normalizedHandle);
 
-            // 保存头像 URL（如果有），让前端直接使用
+            // 保存头像 URL
             if (avatar) {
                 await storage.setItem(toAvatarKey(normalizedHandle), avatar);
-                console.log(`✅ ${provider} 头像 URL 已保存到用户 ${normalizedHandle}: ${avatar}`);
             }
 
             // 创建用户目录并初始化默认内容
@@ -720,10 +659,8 @@ async function handleOAuthLogin(request, response, provider, userData) {
             user.oauthUserId = userId;
             if (avatar) {
                 user.avatar = avatar;
-
-                // 保存/更新头像 URL（每次登录都更新，确保头像是最新的）
+                // 更新头像 URL
                 await storage.setItem(toAvatarKey(normalizedHandle), avatar);
-                console.log(`✅ ${provider} 头像 URL 已更新到用户 ${normalizedHandle}: ${avatar}`);
             }
             await storage.setItem(toKey(normalizedHandle), user);
         }
@@ -793,10 +730,9 @@ router.post('/verify-invitation', async (request, response) => {
         await storage.setItem(toKey(pendingUser.handle), user);
         console.log(`Created new user via ${pendingUser.provider} OAuth with invitation code:`, pendingUser.handle);
 
-        // 保存头像 URL（如果有）
+        // 保存头像 URL
         if (pendingUser.avatar) {
             await storage.setItem(toAvatarKey(pendingUser.handle), pendingUser.avatar);
-            console.log(`✅ ${pendingUser.provider} 头像 URL 已保存到用户 ${pendingUser.handle}: ${pendingUser.avatar}`);
         }
 
         // 使用邀请码
