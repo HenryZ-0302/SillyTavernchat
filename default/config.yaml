@@ -324,7 +324,7 @@ oauth:
     # Linux.do OAuth endpoints
     authUrl: "https://connect.linux.do/oauth2/authorize"
     tokenUrl: "https://connect.linux.do/oauth2/token"
-    userInfoUrl: "https://connect.linux.do/oauth2/userinfo"
+    userInfoUrl: "https://connect.linux.do/api/user"
 
 # -- PUBLIC PAGES CONFIGURATION --
 # Enable public character sharing page
