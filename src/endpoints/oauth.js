@@ -584,36 +584,47 @@ async function handleOAuthLogin(request, response, provider, userData) {
                     : null;
                 break;
             case 'linuxdo':
-                // 处理可能的嵌套数据结构（如 Discourse 可能返回 {user: {...}} 或 {current_user: {...}}）
+                // Linux.do 官方返回格式：{ id, username, name, email, avatar_url, ... }
+                // 可能的嵌套结构：{user: {...}} 或 {current_user: {...}}
                 const userInfo = userData.user || userData.current_user || userData;
 
-                userId = `linuxdo_${userInfo.sub || userInfo.id || userData.sub || userData.id}`;
+                // 提取用户ID (优先使用 id，其次 sub)
+                const rawUserId = userInfo.id || userData.id || userInfo.sub || userData.sub;
+                userId = `linuxdo_${rawUserId}`;
 
-                // Discourse 可能的返回字段优先级：
-                // 1. username - Discourse API 标准字段
-                // 2. login - GitHub 风格
-                // 3. preferred_username - OIDC 标准
-                // 4. name - 备用显示名称
-                username = userInfo.username || userData.username ||
-                          userInfo.login || userData.login ||
-                          userInfo.preferred_username || userData.preferred_username ||
-                          userInfo.name || userData.name ||
-                          `linuxdo_user_${userInfo.sub || userInfo.id || userData.sub || userData.id}`;
+                // 提取用户名 - 根据官方文档，应该返回 username 字段
+                const rawUsername = userInfo.username || userData.username ||
+                                   userInfo.preferred_username || userData.preferred_username ||
+                                   userInfo.name || userData.name;
 
+                if (!rawUsername) {
+                    console.error('❌ 警告：未能从 Linux.do 获取用户名，使用默认格式');
+                    console.error('userData 内容:', JSON.stringify(userData, null, 2));
+                    username = `linuxdo_user_${rawUserId}`;
+                } else {
+                    username = rawUsername;
+                    console.log(`✅ 成功获取 Linux.do 用户名: ${username}`);
+                }
+
+                // 提取邮箱
                 email = userInfo.email || userData.email;
 
-                // 处理头像（Discourse 可能返回 avatar_template）
-                const avatarTemplate = userInfo.avatar_template || userData.avatar_template;
-                avatar = userInfo.picture || userData.picture ||
-                        userInfo.avatar_url || userData.avatar_url ||
-                        (avatarTemplate ? processDiscourseAvatarTemplate(avatarTemplate) : null);
+                // 提取头像 - 官方返回 avatar_url
+                avatar = userInfo.avatar_url || userData.avatar_url ||
+                        userInfo.picture || userData.picture ||
+                        userInfo.avatar_template || userData.avatar_template;
 
-                console.log('======= 提取的用户信息 =======');
-                console.log('userId:', userId);
-                console.log('username:', username);
-                console.log('email:', email);
-                console.log('avatar:', avatar ? '(有)' : '(无)');
-                console.log('============================');
+                // 如果是 avatar_template，需要处理
+                if (avatar && avatar.includes('{size}')) {
+                    avatar = processDiscourseAvatarTemplate(avatar);
+                }
+
+                console.log('======= Linux.do 用户信息提取结果 =======');
+                console.log('用户ID (userId):', userId);
+                console.log('用户名 (username):', username);
+                console.log('邮箱 (email):', email || '(未提供)');
+                console.log('头像 (avatar):', avatar || '(未提供)');
+                console.log('========================================');
                 break;
             default:
                 throw new Error('Unknown OAuth provider');
