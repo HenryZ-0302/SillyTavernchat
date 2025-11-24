@@ -164,7 +164,7 @@ thumbnails:
   # Skip thumbnail generation during server startup (recommended for large user bases)
   # Thumbnails will be generated on-demand when first requested (lazy loading)
   # Set to true to speed up startup time significantly with many users
-  skipStartupGeneration: true
+  # skipStartupGeneration: true
   # Image format of avatar thumbnails:
   # * "jpg": best compression with adjustable quality, no transparency
   # * "png": preserves transparency but increases filesize by about 100%
@@ -284,7 +284,7 @@ claude:
   # Any value other than a non-negative integer will be ignored and caching at depth will not be enabled.
   cachingAtDepth: -1
   # Use 1h TTL instead of the default 5m.
-  ## 5m: base price x 1.25aa
+  ## 5m: base price x 1.25
   ## 1h: base price x 2
   extendedTTL: false
 # -- GOOGLE GEMINI API CONFIGURATION --

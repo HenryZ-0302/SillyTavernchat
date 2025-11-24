@@ -13,10 +13,13 @@ declare global {
     interface Window {
         ai: any;
         isUserOnline: boolean;
+        currentUser?: any;
         userHeartbeat: {
+            init(): any;
             start(): void;
             stop(): void;
-            forceStart(): void;
+            instance(): any;
+            forceStart(): any;
         };
         token?: string;
         csrfToken?: string;

@@ -11,86 +11,10 @@ export let accountsEnabled = false;
 
 // Extend the session every 10 minutes
 const SESSION_EXTEND_INTERVAL = 10 * 60 * 1000;
-// Heartbeat every 60 seconds to detect online presence
-const HEARTBEAT_INTERVAL = 60 * 1000;
 
 // Lightweight online presence indicator
+// Note: window.isUserOnline and window.userHeartbeat are defined in user-heartbeat.js
 window.isUserOnline = false;
-window.userHeartbeat = (function () {
-    /** @type {number | null} */
-    let timerId = null;
-    /** @type {boolean} */
-    let running = false;
-
-    async function sendHeartbeat() {
-        try {
-            if (!accountsEnabled || !currentUser) return;
-            const response = await fetch('/api/users/heartbeat', {
-                method: 'POST',
-                headers: getRequestHeaders(),
-            });
-
-            const ok = response && response.ok;
-            if (ok) {
-                if (!window.isUserOnline) {
-                    window.isUserOnline = true;
-                    window.dispatchEvent(new CustomEvent('user-online-state', { detail: { online: true } }));
-                }
-            } else {
-                if (window.isUserOnline) {
-                    window.isUserOnline = false;
-                    window.dispatchEvent(new CustomEvent('user-online-state', { detail: { online: false } }));
-                }
-            }
-        } catch {
-            if (window.isUserOnline) {
-                window.isUserOnline = false;
-                window.dispatchEvent(new CustomEvent('user-online-state', { detail: { online: false } }));
-            }
-        }
-    }
-
-    function start() {
-        if (running) return;
-        running = true;
-        // Immediate ping once started
-        void sendHeartbeat();
-        timerId = window.setInterval(() => void sendHeartbeat(), HEARTBEAT_INTERVAL);
-    }
-
-    function stop() {
-        running = false;
-        if (timerId !== null) {
-            clearInterval(timerId);
-            timerId = null;
-        }
-    }
-
-    function forceStart() {
-        stop();
-        start();
-    }
-
-    // Auto pause/resume on tab visibility
-    document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-            // keep minimal heartbeat once hidden to reduce noise
-            if (timerId !== null) {
-                clearInterval(timerId);
-                timerId = window.setInterval(() => void sendHeartbeat(), HEARTBEAT_INTERVAL * 2);
-            }
-        } else if (running) {
-            if (timerId !== null) {
-                clearInterval(timerId);
-            }
-            // resume normal cadence and send an immediate ping
-            void sendHeartbeat();
-            timerId = window.setInterval(() => void sendHeartbeat(), HEARTBEAT_INTERVAL);
-        }
-    });
-
-    return { start, stop, forceStart };
-})();
 
 /**
  * Enable or disable user account controls in the UI.

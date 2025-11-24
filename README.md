@@ -1,6 +1,19 @@
-# SillyTavernchat v1.13.12
+# SillyTavernchat v1.14.0
 
-基于SillyTavern 1.13.5的增强版本，集成了用户管理、系统监控、论坛社区、公告管理等企业级功能。
+基于官方 SillyTavern **1.14.0** 的增强版本，继续保持用户管理、系统监控、论坛社区、公告管理等企业级功能。
+
+## 🆕 最新更新（核心升级：1.14.0）
+
+- ✅ **核心版本升级**：完成官方 SillyTavern **v1.13.5 → v1.14.0** 的三方合并，保留全部二次开发功能。
+- ✅ **新增官方特性**：
+  - Firefox 缓存失效修复（静态资源即时更新）。
+  - 聊天备份完整性校验与节流控制。
+  - `plugins/` 插件目录与 `default/scaffold/` 内容脚手架。
+  - 全新 `public/scripts/audio-player.js`、扩展化的媒体处理与 SimpleMutex 并发控制。
+- ✅ **类型/依赖同步**：`eslint-plugin-jest`、全量 `index.d.ts`/`public/global.d.ts` 类型增强，前后端共享 `request.user`/`request.file`、`window.userHeartbeat` 等定义。
+- ✅ **自定义功能兼容性验证**：系统监控、OAuth 登录、邮件服务、论坛/邀请码/公共角色卡等扩展逻辑在 1.14.0 核心上全面通过回归测试。
+
+> ⚠️ 如从旧版本升级，请先备份 `/data/` 与 `config.yaml`，再覆盖代码并重新安装依赖。
 
 ## 🆕 最新更新（V1.13.12）
 
@@ -26,7 +39,7 @@
 
 ## 🌟 核心特性
 
-### 📊 基于SillyTavern 1.13.5
+### 📊 基于SillyTavern 1.14.0
 - ✅ 支持所有原版SillyTavern功能
 - ✅ 集成最新的AI模型和API支持
 - ✅ MiniMax TTS语音合成
