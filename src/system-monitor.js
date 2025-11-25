@@ -60,6 +60,9 @@ class SystemMonitor {
         const diskUsage = this.getDiskUsage();
         const networkUsage = this.getNetworkUsage();
         const uptime = this.getUptime();
+        const activeUsers = this.getActiveUserCount();
+        const onlineUsers = this.getOnlineUserCount();
+        const totalTrackedUsers = this.userLoadStats.size;
 
         return {
             timestamp: Date.now(),
@@ -69,6 +72,9 @@ class SystemMonitor {
             network: networkUsage,
             uptime: uptime,
             loadAverage: os.loadavg(),
+            activeUsers,
+            onlineUsers,
+            totalTrackedUsers,
         };
     }
 
@@ -278,8 +284,6 @@ class SystemMonitor {
         // 只在有活跃用户时记录系统负载
         if (hasActiveUsers) {
             const currentLoad = this.getSystemLoad();
-            // 添加活跃用户数量信息
-            currentLoad.activeUsers = this.getActiveUserCount();
             this.systemLoadHistory.push(currentLoad);
 
             // 保持历史记录在限定长度内
@@ -287,6 +291,35 @@ class SystemMonitor {
                 this.systemLoadHistory.shift();
             }
         }
+    }
+
+    /**
+     * 获取当前在线用户数量（心跳或活动仍在有效期内的用户）
+     * @returns {number} 在线用户数量
+     */
+    getOnlineUserCount() {
+        const now = Date.now();
+        const heartbeatTimeout = 5 * 60 * 1000;
+        const inactiveTimeout = 15 * 60 * 1000;
+        let onlineCount = 0;
+
+        for (const [, stats] of this.userLoadStats) {
+            if (!stats) continue;
+
+            const lastActivity = stats.lastActivity || 0;
+            const lastHeartbeat = stats.lastHeartbeat || 0;
+            const timeSinceLastActivity = now - lastActivity;
+            const timeSinceLastHeartbeat = lastHeartbeat ? now - lastHeartbeat : null;
+
+            const hasRecentHeartbeat = timeSinceLastHeartbeat !== null && timeSinceLastHeartbeat <= heartbeatTimeout;
+            const hasRecentActivity = timeSinceLastActivity <= inactiveTimeout;
+
+            if (stats.isOnline && (hasRecentHeartbeat || hasRecentActivity)) {
+                onlineCount++;
+            }
+        }
+
+        return onlineCount;
     }
 
     /**
@@ -781,6 +814,7 @@ class SystemMonitor {
             if (fs.existsSync(this.userStatsFile)) {
                 const userData = JSON.parse(fs.readFileSync(this.userStatsFile, 'utf8'));
                 this.userLoadStats = new Map(Object.entries(userData));
+                this.normalizeLoadedUserStats();
                 console.log(`加载用户统计数据: ${this.userLoadStats.size} 个用户`);
             }
 
@@ -801,6 +835,47 @@ class SystemMonitor {
             }
         } catch (error) {
             console.error('加载持久化数据失败:', error);
+        }
+    }
+
+    /**
+     * 规范化从磁盘加载的用户统计数据，确保字段完整并重置瞬态状态
+     */
+    normalizeLoadedUserStats() {
+        const now = Date.now();
+        const today = new Date().toDateString();
+
+        for (const [handle, stats] of this.userLoadStats.entries()) {
+            if (!stats || typeof stats !== 'object') {
+                this.userLoadStats.delete(handle);
+                continue;
+            }
+
+            stats.userHandle = stats.userHandle || handle;
+            stats.userName = stats.userName || handle;
+            stats.characterChats = stats.characterChats || {};
+            stats.dailyStats = stats.dailyStats || {};
+            stats.lastActivity = stats.lastActivity || stats.lastSessionTime || stats.lastChatTime || stats.firstActivity || now;
+            stats.lastSessionTime = stats.lastSessionTime || stats.lastActivity;
+            stats.firstActivity = stats.firstActivity || stats.lastActivity;
+            stats.sessionCount = typeof stats.sessionCount === 'number' ? stats.sessionCount : 0;
+            stats.totalMessages = stats.totalMessages || 0;
+            stats.totalUserMessages = stats.totalUserMessages || 0;
+            stats.totalCharacterMessages = stats.totalCharacterMessages || 0;
+
+            if (stats.dailyStats[today]) {
+                stats.todayMessages = stats.dailyStats[today].messages || 0;
+            } else {
+                stats.todayMessages = 0;
+            }
+
+            // 重置瞬态在线状态，避免服务重启后数据不准确
+            stats.isOnline = false;
+            stats.currentSessionStart = null;
+            stats.lastHeartbeat = null;
+            stats.lastHeartbeatTime = null;
+
+            this.userLoadStats.set(handle, stats);
         }
     }
 

@@ -186,6 +186,7 @@
                         <span class="metricValue" id="activeUsers">--</span>
                         <span class="metricUnit">人</span>
                     </div>
+                    <div class="metricSubtext" id="activeUsersSummary">--</div>
                 </div>
 
                 <div class="systemCard flex1">
@@ -219,6 +220,12 @@
                     display: flex;
                     flex-direction: column;
                     gap: 10px;
+                }
+
+                .metricSubtext {
+                    margin-top: 4px;
+                    font-size: 0.85em;
+                    color: var(--gray20);
                 }
 
                 .paginationControls {

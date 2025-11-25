@@ -295,10 +295,24 @@ function updateSystemOverview(systemData) {
         }
     }
 
+    const userSummary = getUserSummaryFromList(currentSystemData.users || []);
+    const activeCount = typeof systemData?.activeUsers === 'number' ? systemData.activeUsers : userSummary.active;
+    const onlineCount = typeof systemData?.onlineUsers === 'number' ? systemData.onlineUsers : userSummary.online;
+    const totalUsers = typeof systemData?.totalTrackedUsers === 'number' ? systemData.totalTrackedUsers : userSummary.total;
+
     // 活跃用户数
     const activeUsers = document.getElementById('activeUsers');
     if (activeUsers) {
-        activeUsers.textContent = currentSystemData.users ? currentSystemData.users.length : 0;
+        activeUsers.textContent = activeCount;
+    }
+
+    const activeUsersSummary = document.getElementById('activeUsersSummary');
+    if (activeUsersSummary) {
+        if (totalUsers === 0) {
+            activeUsersSummary.textContent = '暂无用户';
+        } else {
+            activeUsersSummary.textContent = `在线 ${onlineCount} · 总计 ${totalUsers}`;
+        }
     }
 
     // 运行时间
@@ -313,6 +327,47 @@ let currentUserPage = 1;
 const usersPerPage = 20; // 每页显示20个用户
 let filteredUsers = [];
 let userSearchTerm = '';
+
+function getUserSummaryFromList(users) {
+    if (!Array.isArray(users) || users.length === 0) {
+        return { total: 0, online: 0, active: 0 };
+    }
+
+    const now = Date.now();
+    const activeThreshold = 10 * 60 * 1000;
+    const heartbeatTimeout = 5 * 60 * 1000;
+    const inactiveTimeout = 15 * 60 * 1000;
+
+    let active = 0;
+    let online = 0;
+
+    users.forEach(user => {
+        if (!user) {
+            return;
+        }
+
+        const lastActivity = user.lastActivity || 0;
+        const lastHeartbeat = user.lastHeartbeat || 0;
+        const timeSinceLastActivity = now - lastActivity;
+        const timeSinceLastHeartbeat = lastHeartbeat ? now - lastHeartbeat : null;
+
+        if (timeSinceLastActivity <= activeThreshold) {
+            active++;
+        }
+
+        const heartbeatValid = timeSinceLastHeartbeat !== null && timeSinceLastHeartbeat <= heartbeatTimeout;
+        const activityValid = timeSinceLastActivity <= inactiveTimeout;
+        if (user.isOnline && (heartbeatValid || activityValid)) {
+            online++;
+        }
+    });
+
+    return {
+        total: users.length,
+        active,
+        online,
+    };
+}
 
 // 更新用户统计
 function updateUserActivity(usersData) {
