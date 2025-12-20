@@ -216,7 +216,7 @@ app.get('/', cacheBuster.middleware, (request, response) => {
     if (request.session && (request.session.userId || request.session.handle)) {
         return response.sendFile('index.html', { root: path.join(serverDirectory, 'public') });
     }
-    return response.redirect('/welcome.html');
+    return response.sendFile('welcome.html', { root: path.join(serverDirectory, 'public') });
 });
 
 // Explicit welcome route
