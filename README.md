@@ -239,11 +239,17 @@ sudo sh start.sh
 ```
 
 ### Docker 部署
+官方镜像（Docker Hub）：https://hub.docker.com/r/zhaiker/sillytavernchat-zk
 
 #### Docker Compose（推荐）
 ```bash
 # 在项目根目录执行
 docker compose -f docker/docker-compose.yml up -d --build
+```
+
+如果使用官方镜像（不需要本地构建），可在 `docker/docker-compose.yml` 中将 `image` 改为：
+```
+zhaiker/sillytavernchat-zk:latest
 ```
 
 目录说明（相对 `docker/docker-compose.yml` 所在目录）：
@@ -263,6 +269,7 @@ docker compose -f docker/docker-compose.yml down
 
 #### Docker run（可选）
 ```bash
+docker pull zhaiker/sillytavernchat-zk:latest
 docker build -t sillytavernchat:latest .
 docker run -d --name sillytavernchat \
   -p 8000:8000 \
@@ -273,6 +280,11 @@ docker run -d --name sillytavernchat \
   -v "$(pwd)/docker/plugins:/home/node/app/plugins" \
   -v "$(pwd)/docker/extensions:/home/node/app/public/scripts/extensions/third-party" \
   sillytavernchat:latest
+```
+
+如果直接使用官方镜像，替换最后一行镜像名即可：
+```
+zhaiker/sillytavernchat-zk:latest
 ```
 
 > 提示：Windows PowerShell 可将 `$(pwd)` 替换为 `$PWD`，并使用反引号换行；如需外网访问，请确保 `config.yaml` 中 `listen: true`，并放行端口 `8000`。
