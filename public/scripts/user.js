@@ -1195,7 +1195,7 @@ async function openAdminPanel() {
         controlsHtml.find('.userCount').text(`显示 ${startIndex + 1}-${Math.min(endIndex, filteredUsers.length)} / ${filteredUsers.length} 个用户`);
 
         // 绑定搜索事件（使用防抖）
-        controlsHtml.find('#userSearchInput').off('input').on('input', debounceSearch(function() {
+        controlsHtml.find('#userSearchInput').off('input').on('input', debounceSearch(function () {
             userSearchTerm = $(this).val().trim();
             currentUserPage = 1; // 重置到第一页
             renderUsers();
@@ -1406,7 +1406,7 @@ async function openAdminPanel() {
 
     // 绑定用户分页按钮事件
     function bindUserPaginationEvents() {
-        template.find('.user-pagination-btn').off('click').on('click', function() {
+        template.find('.user-pagination-btn').off('click').on('click', function () {
             currentUserPage = parseInt($(this).data('page'));
             renderUsers();
 
@@ -1421,7 +1421,7 @@ async function openAdminPanel() {
     // 防抖函数
     function debounceSearch(func, wait) {
         let timeout;
-        return function(...args) {
+        return function (...args) {
             clearTimeout(timeout);
             timeout = setTimeout(() => func.apply(this, args), wait);
         };
@@ -1441,12 +1441,12 @@ async function openAdminPanel() {
             }, 100);
         }
     });
-// 管理员面板打开时立即初始化扩展功能
-if (typeof window.initializeAdminExtensions === 'function') {
-    setTimeout(() => {
-        window.initializeAdminExtensions();
-    }, 200);
-}
+    // 管理员面板打开时立即初始化扩展功能
+    if (typeof window.initializeAdminExtensions === 'function') {
+        setTimeout(() => {
+            window.initializeAdminExtensions();
+        }, 200);
+    }
     template.find('.createUserDisplayName').on('input', async function () {
         const slug = await slugify(String($(this).val()));
         template.find('.createUserHandle').val(slug);
@@ -1495,7 +1495,7 @@ function initScheduledTasksHandlers(template) {
     const statusDiv = template.find('#scheduledClearBackupsStatus');
 
     // 切换启用/禁用状态
-    enabledCheckbox.on('change', function() {
+    enabledCheckbox.on('change', function () {
         if ($(this).is(':checked')) {
             configDiv.slideDown();
         } else {
@@ -1504,7 +1504,7 @@ function initScheduledTasksHandlers(template) {
     });
 
     // 验证Cron表达式
-    testCronButton.on('click', async function() {
+    testCronButton.on('click', async function () {
         const cronExpression = cronInput.val().trim();
         if (!cronExpression) {
             showScheduledTaskStatus(statusDiv, '请输入Cron表达式', 'error');
@@ -1526,7 +1526,7 @@ function initScheduledTasksHandlers(template) {
     });
 
     // 保存配置
-    saveButton.on('click', async function() {
+    saveButton.on('click', async function () {
         const enabled = enabledCheckbox.is(':checked');
         const cronExpression = cronInput.val().trim();
 
@@ -1569,7 +1569,7 @@ function initScheduledTasksHandlers(template) {
     });
 
     // 立即执行
-    testButton.on('click', async function() {
+    testButton.on('click', async function () {
         if (!confirm('确定要立即执行清理所有用户备份文件的任务吗？')) {
             return;
         }
@@ -1684,6 +1684,234 @@ function initScheduledTasksHandlers(template) {
             }, 3000);
         }
     }
+
+    // ========== 备份与恢复功能 ==========
+
+    /**
+     * 加载备份列表
+     */
+    async function loadBackupList() {
+        const container = template.find('#backupListContainer');
+        container.html('<p style="opacity: 0.6; text-align: center;">正在加载备份列表...</p>');
+
+        try {
+            const response = await fetch('/api/admin/backup/list', {
+                headers: getRequestHeaders(),
+            });
+
+            if (!response.ok) {
+                throw new Error('加载备份列表失败');
+            }
+
+            const data = await response.json();
+            const backups = data.backups || [];
+
+            if (backups.length === 0) {
+                container.html('<p style="opacity: 0.6; text-align: center;">暂无备份文件</p>');
+                return;
+            }
+
+            let html = '<div class="backupList" style="display: flex; flex-direction: column; gap: 10px;">';
+            for (const backup of backups) {
+                const sizeStr = formatFileSize(backup.size);
+                const dateStr = new Date(backup.created).toLocaleString('zh-CN');
+                html += `
+                    <div class="backupItem" style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--SmartThemeChatTintColor); border-radius: 8px; border: 1px solid var(--SmartThemeBorderColor);">
+                        <div style="flex: 1;">
+                            <div style="font-weight: 600; margin-bottom: 4px;">${backup.filename}</div>
+                            <div style="font-size: 0.85em; opacity: 0.7;">${dateStr} · ${sizeStr}</div>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button type="button" class="menu_button downloadBackupBtn" data-filename="${backup.filename}" title="下载备份">
+                                <i class="fa-fw fa-solid fa-download"></i>
+                            </button>
+                            <button type="button" class="menu_button restoreBackupBtn" data-filename="${backup.filename}" title="恢复备份">
+                                <i class="fa-fw fa-solid fa-upload"></i>
+                            </button>
+                            <button type="button" class="menu_button warning deleteBackupBtn" data-filename="${backup.filename}" title="删除备份">
+                                <i class="fa-fw fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+            html += '</div>';
+            container.html(html);
+
+            // 绑定按钮事件
+            container.find('.downloadBackupBtn').on('click', function () {
+                const filename = $(this).data('filename');
+                window.location.href = `/api/admin/backup/download/${encodeURIComponent(filename)}`;
+            });
+
+            container.find('.restoreBackupBtn').on('click', async function () {
+                const filename = $(this).data('filename');
+                await restoreBackup(filename);
+            });
+
+            container.find('.deleteBackupBtn').on('click', async function () {
+                const filename = $(this).data('filename');
+                await deleteBackup(filename);
+            });
+
+        } catch (error) {
+            console.error('Error loading backup list:', error);
+            container.html(`<p style="color: #dc3545; text-align: center;">加载失败: ${error.message}</p>`);
+        }
+    }
+
+    /**
+     * 格式化文件大小
+     */
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    /**
+     * 创建备份
+     */
+    async function createBackup() {
+        const statusDiv = template.find('#createBackupStatus');
+        statusDiv.css({ 'background': '#d1ecf1', 'color': '#0c5460', 'padding': '10px', 'border-radius': '5px' })
+            .text('正在创建备份，请稍候...').show();
+
+        try {
+            const response = await fetch('/api/admin/backup/create', {
+                method: 'POST',
+                headers: getRequestHeaders(),
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || '创建备份失败');
+            }
+
+            const data = await response.json();
+            statusDiv.css({ 'background': '#d4edda', 'color': '#155724' })
+                .text(`✓ 备份创建成功: ${data.filename}`);
+
+            // 刷新列表
+            await loadBackupList();
+
+            setTimeout(() => statusDiv.fadeOut(), 5000);
+
+        } catch (error) {
+            console.error('Error creating backup:', error);
+            statusDiv.css({ 'background': '#f8d7da', 'color': '#721c24' })
+                .text(`✗ 创建失败: ${error.message}`);
+        }
+    }
+
+    /**
+     * 删除备份
+     */
+    async function deleteBackup(filename) {
+        const confirm = await callGenericPopup(
+            `确定要删除备份文件 "${filename}" 吗？此操作不可恢复！`,
+            POPUP_TYPE.CONFIRM,
+            '',
+            { okButton: '删除', cancelButton: '取消' }
+        );
+
+        if (confirm !== POPUP_RESULT.AFFIRMATIVE) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/admin/backup/${encodeURIComponent(filename)}`, {
+                method: 'DELETE',
+                headers: getRequestHeaders(),
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || '删除失败');
+            }
+
+            toastr.success('备份已删除');
+            await loadBackupList();
+
+        } catch (error) {
+            console.error('Error deleting backup:', error);
+            toastr.error('删除失败: ' + error.message);
+        }
+    }
+
+    /**
+     * 恢复备份
+     */
+    async function restoreBackup(filename) {
+        // 第一次确认
+        const confirm1 = await callGenericPopup(
+            `<strong>⚠️ 警告：恢复操作会覆盖所有现有数据！</strong><br><br>
+             要恢复的备份: <code>${filename}</code><br><br>
+             恢复前会自动创建当前数据的备份。<br>
+             恢复完成后需要<strong>重启服务</strong>才能生效。<br><br>
+             确定要继续吗？`,
+            POPUP_TYPE.CONFIRM,
+            '',
+            { okButton: '继续', cancelButton: '取消' }
+        );
+
+        if (confirm1 !== POPUP_RESULT.AFFIRMATIVE) {
+            return;
+        }
+
+        // 第二次确认
+        const inputResult = await callGenericPopup(
+            '请输入 <code>CONFIRM_RESTORE</code> 确认恢复操作:',
+            POPUP_TYPE.INPUT,
+            '',
+            { okButton: '恢复', cancelButton: '取消' }
+        );
+
+        if (inputResult !== 'CONFIRM_RESTORE') {
+            toastr.warning('确认文本不匹配，已取消恢复');
+            return;
+        }
+
+        toastr.info('正在恢复备份，请稍候...');
+
+        try {
+            const response = await fetch('/api/admin/backup/restore', {
+                method: 'POST',
+                headers: getRequestHeaders(),
+                body: JSON.stringify({ filename, confirmRestore: 'CONFIRM_RESTORE' }),
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || '恢复失败');
+            }
+
+            const data = await response.json();
+            await callGenericPopup(
+                `<strong>✓ 恢复完成！</strong><br><br>
+                 恢复前的数据已备份为: <code>${data.preRestoreBackup}</code><br><br>
+                 <strong>请重启服务以应用配置更改。</strong>`,
+                POPUP_TYPE.TEXT,
+                '',
+                { okButton: '我知道了' }
+            );
+
+            await loadBackupList();
+
+        } catch (error) {
+            console.error('Error restoring backup:', error);
+            toastr.error('恢复失败: ' + error.message);
+        }
+    }
+
+    // 绑定备份相关事件
+    template.find('#createBackupBtn').on('click', createBackup);
+    template.find('#refreshBackupsBtn').on('click', loadBackupList);
+
+    // 切换到备份 tab 时加载列表
+    template.find('.backupRestoreButton').on('click', loadBackupList);
 }
 
 /**
@@ -1698,14 +1926,14 @@ async function logout() {
         }
 
         // 发送登出请求
-    await fetch('/api/users/logout', {
-        method: 'POST',
-        headers: getRequestHeaders(),
-    });
-} catch (error) {
-    console.warn('Logout request failed:', error);
-    // 即使登出请求失败，也继续执行页面跳转
-}
+        await fetch('/api/users/logout', {
+            method: 'POST',
+            headers: getRequestHeaders(),
+        });
+    } catch (error) {
+        console.warn('Logout request failed:', error);
+        // 即使登出请求失败，也继续执行页面跳转
+    }
     // On an explicit logout stop auto login
     // to allow user to change username even
     // when auto auth (such as authelia or basic)

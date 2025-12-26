@@ -9,10 +9,12 @@
         <button type="button" class="systemLoadButton menu_button menu_button_icon" data-target-tab="systemLoadBlock">
             <h4 data-i18n="System Load">系统负载</h4>
         </button>
-        <button type="button" class="invitationCodesButton menu_button menu_button_icon" data-target-tab="invitationCodesBlock">
+        <button type="button" class="invitationCodesButton menu_button menu_button_icon"
+            data-target-tab="invitationCodesBlock">
             <h4 data-i18n="Invitation Codes">邀请码管理</h4>
         </button>
-        <button type="button" class="announcementsButton menu_button menu_button_icon" data-target-tab="announcementsBlock">
+        <button type="button" class="announcementsButton menu_button menu_button_icon"
+            data-target-tab="announcementsBlock">
             <h4 data-i18n="Announcements">公告管理</h4>
         </button>
         <button type="button" class="emailConfigButton menu_button menu_button_icon" data-target-tab="emailConfigBlock">
@@ -21,12 +23,17 @@
         <button type="button" class="oauthConfigButton menu_button menu_button_icon" data-target-tab="oauthConfigBlock">
             <h4 data-i18n="OAuth Config">OAuth配置</h4>
         </button>
+        <button type="button" class="backupRestoreButton menu_button menu_button_icon"
+            data-target-tab="backupRestoreBlock">
+            <h4 data-i18n="Backup Restore">备份与恢复</h4>
+        </button>
     </nav>
 
     <div class="userAccountTemplate template_element">
         <div class="flex-container userAccount alignItemsCenter flexGap10">
             <div class="flex-container flexFlowColumn alignItemsCenter flexNoGap">
-                <div class="avatar" title="If a custom avatar is not set, the user's default persona image will be displayed.">
+                <div class="avatar"
+                    title="If a custom avatar is not set, the user's default persona image will be displayed.">
                     <img src="img/ai4.png" alt="avatar">
                 </div>
                 <div class="flex-container alignItemsCenter">
@@ -107,7 +114,8 @@
         </div>
     </div>
     <div class="navTab usersList flex-container flexFlowColumn">
-        <div class="flex-container justifyCenter flexGap10" style="margin-bottom: 15px; padding: 10px; border-bottom: 1px solid var(--SmartThemeBorderColor);">
+        <div class="flex-container justifyCenter flexGap10"
+            style="margin-bottom: 15px; padding: 10px; border-bottom: 1px solid var(--SmartThemeBorderColor);">
             <button type="button" class="menu_button menu_button_icon warning clearAllBackupsButton">
                 <i class="fa-fw fa-solid fa-trash-alt"></i>
                 <span>一键清理所有用户备份文件</span>
@@ -119,14 +127,16 @@
         </div>
 
         <!-- 定时任务配置区域 -->
-        <div class="scheduledTasksSection" style="margin: 20px 0; padding: 20px; background: var(--SmartThemeBlurTintColor); border-radius: 10px; color: var(--SmartThemeBodyColor);">
+        <div class="scheduledTasksSection"
+            style="margin: 20px 0; padding: 20px; background: var(--SmartThemeBlurTintColor); border-radius: 10px; color: var(--SmartThemeBodyColor);">
             <h3 style="margin-top: 0; margin-bottom: 15px; color: var(--SmartThemeBodyColor);">
                 <i class="fa-fw fa-solid fa-clock"></i>
                 定时任务配置
             </h3>
 
             <!-- 定时清理所有用户备份文件 -->
-            <div class="scheduledTaskItem" style="margin-bottom: 20px; padding: 15px; background: var(--SmartThemeBlurTintColor); border-radius: 8px; border: 1px solid var(--SmartThemeBorderColor); color: var(--SmartThemeBodyColor);">
+            <div class="scheduledTaskItem"
+                style="margin-bottom: 20px; padding: 15px; background: var(--SmartThemeBlurTintColor); border-radius: 8px; border: 1px solid var(--SmartThemeBorderColor); color: var(--SmartThemeBodyColor);">
                 <div class="flex-container alignItemsCenter justifySpaceBetween" style="margin-bottom: 15px;">
                     <div>
                         <h4 style="margin: 0 0 5px 0; color: var(--SmartThemeBodyColor);">
@@ -143,29 +153,42 @@
                     </label>
                 </div>
 
-                <div class="flex-container flexFlowColumn flexGap10" id="scheduledClearBackupsConfig" style="display: none; color: var(--SmartThemeBodyColor);">
+                <div class="flex-container flexFlowColumn flexGap10" id="scheduledClearBackupsConfig"
+                    style="display: none; color: var(--SmartThemeBodyColor);">
                     <div class="flex-container flexGap10 alignItemsCenter">
                         <label style="min-width: 120px; color: var(--SmartThemeBodyColor);">Cron表达式:</label>
                         <input type="text" id="scheduledClearBackupsCron" class="text_pole flex1"
-                               placeholder="例如: 0 2 * * * (每天凌晨2点)"
-                               pattern="[0-9\*\-\,\/\s]+">
-                        <button type="button" class="menu_button menu_button_icon" id="testScheduledClearBackupsCron" title="验证Cron表达式">
+                            placeholder="例如: 0 2 * * * (每天凌晨2点)" pattern="[0-9\*\-\,\/\s]+">
+                        <button type="button" class="menu_button menu_button_icon" id="testScheduledClearBackupsCron"
+                            title="验证Cron表达式">
                             <i class="fa-fw fa-solid fa-check"></i>
                             <span>验证</span>
                         </button>
                     </div>
 
-                    <div class="cronExamples" style="margin-top: 10px; padding: 10px; background: var(--SmartThemeChatTintColor); border-radius: 5px; font-size: 0.85em; color: var(--SmartThemeBodyColor); border: 1px solid var(--SmartThemeBorderColor);">
+                    <div class="cronExamples"
+                        style="margin-top: 10px; padding: 10px; background: var(--SmartThemeChatTintColor); border-radius: 5px; font-size: 0.85em; color: var(--SmartThemeBodyColor); border: 1px solid var(--SmartThemeBorderColor);">
                         <strong style="color: var(--SmartThemeBodyColor);">常用Cron表达式示例：</strong>
                         <ul style="margin: 5px 0 0 0; padding-left: 20px; color: var(--SmartThemeEmColor);">
-                            <li style="margin: 5px 0;"><code style="background: var(--SmartThemeBlurTintColor); padding: 2px 6px; border-radius: 3px; color: var(--SmartThemeQuoteColor); border: 1px solid var(--SmartThemeBorderColor);">0 2 * * *</code> - 每天凌晨2点执行</li>
-                            <li style="margin: 5px 0;"><code style="background: var(--SmartThemeBlurTintColor); padding: 2px 6px; border-radius: 3px; color: var(--SmartThemeQuoteColor); border: 1px solid var(--SmartThemeBorderColor);">0 0 * * 0</code> - 每周日凌晨执行</li>
-                            <li style="margin: 5px 0;"><code style="background: var(--SmartThemeBlurTintColor); padding: 2px 6px; border-radius: 3px; color: var(--SmartThemeQuoteColor); border: 1px solid var(--SmartThemeBorderColor);">0 0 1 * *</code> - 每月1号凌晨执行</li>
-                            <li style="margin: 5px 0;"><code style="background: var(--SmartThemeBlurTintColor); padding: 2px 6px; border-radius: 3px; color: var(--SmartThemeQuoteColor); border: 1px solid var(--SmartThemeBorderColor);">0 */6 * * *</code> - 每6小时执行一次</li>
-                            <li style="margin: 5px 0;"><code style="background: var(--SmartThemeBlurTintColor); padding: 2px 6px; border-radius: 3px; color: var(--SmartThemeQuoteColor); border: 1px solid var(--SmartThemeBorderColor);">0 0 0 * * 0</code> - 每周日凌晨执行</li>
+                            <li style="margin: 5px 0;"><code
+                                    style="background: var(--SmartThemeBlurTintColor); padding: 2px 6px; border-radius: 3px; color: var(--SmartThemeQuoteColor); border: 1px solid var(--SmartThemeBorderColor);">0 2 * * *</code>
+                                - 每天凌晨2点执行</li>
+                            <li style="margin: 5px 0;"><code
+                                    style="background: var(--SmartThemeBlurTintColor); padding: 2px 6px; border-radius: 3px; color: var(--SmartThemeQuoteColor); border: 1px solid var(--SmartThemeBorderColor);">0 0 * * 0</code>
+                                - 每周日凌晨执行</li>
+                            <li style="margin: 5px 0;"><code
+                                    style="background: var(--SmartThemeBlurTintColor); padding: 2px 6px; border-radius: 3px; color: var(--SmartThemeQuoteColor); border: 1px solid var(--SmartThemeBorderColor);">0 0 1 * *</code>
+                                - 每月1号凌晨执行</li>
+                            <li style="margin: 5px 0;"><code
+                                    style="background: var(--SmartThemeBlurTintColor); padding: 2px 6px; border-radius: 3px; color: var(--SmartThemeQuoteColor); border: 1px solid var(--SmartThemeBorderColor);">0 */6 * * *</code>
+                                - 每6小时执行一次</li>
+                            <li style="margin: 5px 0;"><code
+                                    style="background: var(--SmartThemeBlurTintColor); padding: 2px 6px; border-radius: 3px; color: var(--SmartThemeQuoteColor); border: 1px solid var(--SmartThemeBorderColor);">0 0 0 * * 0</code>
+                                - 每周日凌晨执行</li>
                         </ul>
                         <p style="margin: 5px 0 0 0; opacity: 0.9; color: var(--SmartThemeEmColor);">
-                            Cron格式: <code style="background: var(--SmartThemeBlurTintColor); padding: 2px 6px; border-radius: 3px; color: var(--SmartThemeQuoteColor); border: 1px solid var(--SmartThemeBorderColor);">分钟 小时 日 月 星期</code>
+                            Cron格式: <code
+                                style="background: var(--SmartThemeBlurTintColor); padding: 2px 6px; border-radius: 3px; color: var(--SmartThemeQuoteColor); border: 1px solid var(--SmartThemeBorderColor);">分钟 小时 日 月 星期</code>
                         </p>
                     </div>
 
@@ -174,7 +197,8 @@
                             <i class="fa-fw fa-solid fa-save"></i>
                             <span>保存配置</span>
                         </button>
-                        <button type="button" class="menu_button menu_button_icon" id="testScheduledClearBackups" title="立即执行一次清理任务（用于测试）">
+                        <button type="button" class="menu_button menu_button_icon" id="testScheduledClearBackups"
+                            title="立即执行一次清理任务（用于测试）">
                             <i class="fa-fw fa-solid fa-play"></i>
                             <span>立即执行</span>
                         </button>
@@ -184,7 +208,8 @@
                         </button>
                     </div>
 
-                    <div id="scheduledClearBackupsStatus" style="margin-top: 10px; padding: 10px; border-radius: 5px; display: none;"></div>
+                    <div id="scheduledClearBackupsStatus"
+                        style="margin-top: 10px; padding: 10px; border-radius: 5px; display: none;"></div>
                 </div>
             </div>
         </div>
@@ -194,20 +219,25 @@
             <div class="flex-container flexNoGap">
                 <span data-i18n="Display Name:">Display Name:</span>
                 <span class="warning">*</span>
-                <input name="_name" class="createUserDisplayName text_pole" type="text" placeholder="e.g. John Snow" autocomplete="username">
+                <input name="_name" class="createUserDisplayName text_pole" type="text" placeholder="e.g. John Snow"
+                    autocomplete="username">
             </div>
             <div class="flex-container flexNoGap">
                 <span data-i18n="User Handle:">User Handle:</span>
                 <span class="warning">*</span>
-                <input name="handle" class="createUserHandle text_pole" placeholder="e.g. john-snow (lowercase letters, numbers, and dashes only)" type="text" pattern="[a-z0-9-]+">
+                <input name="handle" class="createUserHandle text_pole"
+                    placeholder="e.g. john-snow (lowercase letters, numbers, and dashes only)" type="text"
+                    pattern="[a-z0-9-]+">
             </div>
             <div class="flex-container flexNoGap">
                 <span data-i18n="Password:">Password:</span>
-                <input name="password" class="createUserPassword text_pole" type="password" placeholder="[ No password ]" autocomplete="new-password">
+                <input name="password" class="createUserPassword text_pole" type="password"
+                    placeholder="[ No password ]" autocomplete="new-password">
             </div>
             <div class="flex-container flexNoGap">
                 <span data-i18n="Confirm Password:">Confirm Password:</span>
-                <input name="confirm" class="createUserConfirmPassword text_pole" type="password" placeholder="[ No password ]" autocomplete="new-password">
+                <input name="confirm" class="createUserConfirmPassword text_pole" type="password"
+                    placeholder="[ No password ]" autocomplete="new-password">
             </div>
             <span data-i18n="This will create a new subfolder...">
                 This will create a new subfolder in the /data/ directory with the user's handle as the folder name.
@@ -347,7 +377,8 @@
             <h3 data-i18n="Invitation Code Management">邀请码管理</h3>
 
             <!-- 使用说明 -->
-            <div class="usage-notice" style="background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; padding: 10px; margin-bottom: 15px;">
+            <div class="usage-notice"
+                style="background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; padding: 10px; margin-bottom: 15px;">
                 <h4 style="margin-top: 0; color: #856404;">
                     <i class="fa-fw fa-solid fa-info-circle"></i>
                     使用说明
@@ -358,7 +389,8 @@
                 <p style="margin: 5px 0; color: #856404;">
                     请在项目根目录下的 <code>.\config.yaml</code> 文件中添加以下配置：
                 </p>
-                <pre style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 3px; padding: 8px; margin: 5px 0; font-family: monospace; font-size: 12px;">enableInvitationCodes: true</pre>
+                <pre
+                    style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 3px; padding: 8px; margin: 5px 0; font-family: monospace; font-size: 12px;">enableInvitationCodes: true</pre>
                 <p style="margin: 5px 0; color: #856404;">
                     保存配置文件后，重启服务器即可启用邀请码功能。
                 </p>
@@ -372,7 +404,8 @@
                 </p>
                 <form class="flex-container flexGap10 alignItemsCenter purchaseLinkForm" action="javascript:void(0);">
                     <div class="flex1">
-                        <input name="purchaseLink" class="text_pole wide100p" type="url" placeholder="例如：https://your-shop.com/buy-code" id="purchaseLinkInput">
+                        <input name="purchaseLink" class="text_pole wide100p" type="url"
+                            placeholder="例如：https://your-shop.com/buy-code" id="purchaseLinkInput">
                     </div>
                     <button type="submit" class="menu_button menu_button_icon">
                         <i class="fa-fw fa-solid fa-save"></i>
@@ -388,7 +421,8 @@
 
                 <!-- 单个创建 -->
                 <div class="creation-mode" id="singleCreationMode">
-                    <form class="flex-container flexGap10 alignItemsCenter createInvitationForm" action="javascript:void(0);">
+                    <form class="flex-container flexGap10 alignItemsCenter createInvitationForm"
+                        action="javascript:void(0);">
                         <div class="flex-container flexNoGap">
                             <span>有效期类型:</span>
                             <select name="durationType" class="text_pole">
@@ -410,10 +444,12 @@
 
                 <!-- 批量创建 -->
                 <div class="creation-mode" id="batchCreationMode" style="display: none;">
-                    <form class="flex-container flexGap10 alignItemsCenter createBatchInvitationForm" action="javascript:void(0);">
+                    <form class="flex-container flexGap10 alignItemsCenter createBatchInvitationForm"
+                        action="javascript:void(0);">
                         <div class="flex-container flexNoGap">
                             <span>数量:</span>
-                            <input name="batchCount" class="text_pole" type="number" placeholder="批量创建数量" min="1" max="100" value="10">
+                            <input name="batchCount" class="text_pole" type="number" placeholder="批量创建数量" min="1"
+                                max="100" value="10">
                         </div>
                         <div class="flex-container flexNoGap">
                             <span>有效期类型:</span>
@@ -436,7 +472,8 @@
 
                 <!-- 切换按钮 -->
                 <div class="creation-toggle flex-container flexGap10">
-                    <button type="button" class="menu_button menu_button_icon creation-toggle-btn active" data-mode="single">
+                    <button type="button" class="menu_button menu_button_icon creation-toggle-btn active"
+                        data-mode="single">
                         <i class="fa-fw fa-solid fa-plus"></i>
                         <span>单个创建</span>
                     </button>
@@ -449,7 +486,8 @@
 
             <!-- 邀请码列表 -->
             <div class="invitationCodesList">
-                <div class="flex-container alignItemsCenter flexGap10" style="justify-content: space-between; margin-bottom: 10px; flex-wrap: nowrap;">
+                <div class="flex-container alignItemsCenter flexGap10"
+                    style="justify-content: space-between; margin-bottom: 10px; flex-wrap: nowrap;">
                     <h4 style="margin: 0; white-space: nowrap;">现有邀请码</h4>
                     <div class="flex-container alignItemsCenter" style="gap: 8px; flex-wrap: nowrap;">
                         <span style="white-space: nowrap; font-size: 0.9em;">类型:</span>
@@ -516,7 +554,8 @@
 
             <!-- 公告类型切换 -->
             <div class="flex-container justifyCenter flexGap10" style="margin-bottom: 15px;">
-                <button type="button" class="menu_button menu_button_icon announcement-type-tab active" data-type="main">
+                <button type="button" class="menu_button menu_button_icon announcement-type-tab active"
+                    data-type="main">
                     <i class="fa-fw fa-solid fa-home"></i>
                     <span>主站公告</span>
                 </button>
@@ -531,14 +570,16 @@
                 <!-- 创建新公告 -->
                 <div class="createAnnouncementSection">
                     <h4>创建新公告</h4>
-                    <form class="flex-container flexFlowColumn flexGap10 createAnnouncementForm" action="javascript:void(0);">
+                    <form class="flex-container flexFlowColumn flexGap10 createAnnouncementForm"
+                        action="javascript:void(0);">
                         <div class="flex-container flexNoGap">
                             <span>标题:</span>
                             <input name="title" class="text_pole" type="text" placeholder="输入公告标题" required>
                         </div>
                         <div class="flex-container flexNoGap">
                             <span>内容:</span>
-                            <textarea name="content" class="text_pole" rows="5" placeholder="输入公告内容" required></textarea>
+                            <textarea name="content" class="text_pole" rows="5" placeholder="输入公告内容"
+                                required></textarea>
                         </div>
                         <div class="flex-container alignItemsCenter flexGap10">
                             <label class="flex-container alignItemsCenter flexGap5">
@@ -573,14 +614,16 @@
                 <!-- 创建新登录页面公告 -->
                 <div class="createAnnouncementSection">
                     <h4>创建登录页面公告</h4>
-                    <form class="flex-container flexFlowColumn flexGap10 createLoginAnnouncementForm" action="javascript:void(0);">
+                    <form class="flex-container flexFlowColumn flexGap10 createLoginAnnouncementForm"
+                        action="javascript:void(0);">
                         <div class="flex-container flexNoGap">
                             <span>标题:</span>
                             <input name="title" class="text_pole" type="text" placeholder="输入公告标题" required>
                         </div>
                         <div class="flex-container flexNoGap">
                             <span>内容:</span>
-                            <textarea name="content" class="text_pole" rows="5" placeholder="输入公告内容" required></textarea>
+                            <textarea name="content" class="text_pole" rows="5" placeholder="输入公告内容"
+                                required></textarea>
                         </div>
                         <div class="flex-container alignItemsCenter flexGap10">
                             <label class="flex-container alignItemsCenter flexGap5">
@@ -637,12 +680,15 @@
                 <div class="emailConfigFields" style="margin-top: 15px;">
                     <div class="flex-container flexFlowColumn flexGap10">
                         <div class="flex-container flexNoGap alignItemsCenter">
-                            <span data-i18n="SMTP Host:" style="min-width: 120px; display: inline-block;">SMTP 服务器:</span>
-                            <input id="emailSmtpHost" class="text_pole flex1" type="text" placeholder="例如: smtp.gmail.com">
+                            <span data-i18n="SMTP Host:" style="min-width: 120px; display: inline-block;">SMTP
+                                服务器:</span>
+                            <input id="emailSmtpHost" class="text_pole flex1" type="text"
+                                placeholder="例如: smtp.gmail.com">
                         </div>
 
                         <div class="flex-container flexNoGap alignItemsCenter">
-                            <span data-i18n="SMTP Port:" style="min-width: 120px; display: inline-block;">SMTP 端口:</span>
+                            <span data-i18n="SMTP Port:" style="min-width: 120px; display: inline-block;">SMTP
+                                端口:</span>
                             <input id="emailSmtpPort" class="text_pole flex1" type="number" placeholder="587">
                         </div>
 
@@ -654,18 +700,23 @@
                         </div>
 
                         <div class="flex-container flexNoGap alignItemsCenter">
-                            <span data-i18n="SMTP User:" style="min-width: 120px; display: inline-block;">SMTP 用户名:</span>
-                            <input id="emailSmtpUser" class="text_pole flex1" type="text" placeholder="your-email@example.com">
+                            <span data-i18n="SMTP User:" style="min-width: 120px; display: inline-block;">SMTP
+                                用户名:</span>
+                            <input id="emailSmtpUser" class="text_pole flex1" type="text"
+                                placeholder="your-email@example.com">
                         </div>
 
                         <div class="flex-container flexNoGap alignItemsCenter">
-                            <span data-i18n="SMTP Password:" style="min-width: 120px; display: inline-block;">SMTP 密码:</span>
-                            <input id="emailSmtpPassword" class="text_pole flex1" type="password" placeholder="密码或授权码" autocomplete="new-password">
+                            <span data-i18n="SMTP Password:" style="min-width: 120px; display: inline-block;">SMTP
+                                密码:</span>
+                            <input id="emailSmtpPassword" class="text_pole flex1" type="password" placeholder="密码或授权码"
+                                autocomplete="new-password">
                         </div>
 
                         <div class="flex-container flexNoGap alignItemsCenter">
                             <span data-i18n="From Email:" style="min-width: 120px; display: inline-block;">发件人邮箱:</span>
-                            <input id="emailFrom" class="text_pole flex1" type="email" placeholder="noreply@example.com">
+                            <input id="emailFrom" class="text_pole flex1" type="email"
+                                placeholder="noreply@example.com">
                         </div>
 
                         <div class="flex-container flexNoGap alignItemsCenter">
@@ -686,7 +737,8 @@
                     </button>
                 </div>
 
-                <div class="emailConfigTips" style="margin-top: 20px; padding: 15px; background: var(--SmartThemeBlurTintColor); border-radius: 5px;">
+                <div class="emailConfigTips"
+                    style="margin-top: 20px; padding: 15px; background: var(--SmartThemeBlurTintColor); border-radius: 5px;">
                     <h4>配置说明：</h4>
                     <ul style="padding-left: 20px;">
                         <li><strong>Gmail:</strong> 使用 smtp.gmail.com:587，需要在 Google 账号中开启"应用专用密码"</li>
@@ -710,7 +762,8 @@
             <div class="oauthConfigContainer" style="max-width: 800px; margin: 0 auto;">
 
                 <!-- GitHub OAuth配置 -->
-                <div class="oauthProvider" style="margin-bottom: 30px; padding: 20px; background: var(--SmartThemeBlurTintColor); border-radius: 8px;">
+                <div class="oauthProvider"
+                    style="margin-bottom: 30px; padding: 20px; background: var(--SmartThemeBlurTintColor); border-radius: 8px;">
                     <div class="flex-container alignItemsCenter" style="margin-bottom: 15px;">
                         <i class="fa-brands fa-github" style="font-size: 24px; margin-right: 10px;"></i>
                         <h4 style="margin: 0;">GitHub OAuth</h4>
@@ -724,12 +777,14 @@
 
                         <div class="flex-container flexFlowColumn">
                             <small>Client ID:</small>
-                            <input type="text" class="text_pole" id="oauthGithubClientId" placeholder="GitHub OAuth Client ID">
+                            <input type="text" class="text_pole" id="oauthGithubClientId"
+                                placeholder="GitHub OAuth Client ID">
                         </div>
 
                         <div class="flex-container flexFlowColumn">
                             <small>Client Secret:</small>
-                            <input type="password" class="text_pole" id="oauthGithubClientSecret" placeholder="GitHub OAuth Client Secret">
+                            <input type="password" class="text_pole" id="oauthGithubClientSecret"
+                                placeholder="GitHub OAuth Client Secret">
                         </div>
 
                         <div class="flex-container flexFlowColumn">
@@ -738,16 +793,19 @@
                         </div>
 
                         <small style="color: var(--SmartThemeQuoteColor); margin-top: 5px;">
-                            在 <a href="https://github.com/settings/developers" target="_blank">GitHub Developer Settings</a> 创建 OAuth App 获取凭据<br>
+                            在 <a href="https://github.com/settings/developers" target="_blank">GitHub Developer
+                                Settings</a> 创建 OAuth App 获取凭据<br>
                             <strong>💡 提示：</strong>如果留空Callback URL，系统会自动根据当前服务器地址和端口生成回调URL，无需手动配置
                         </small>
                     </div>
                 </div>
 
                 <!-- Discord OAuth配置 -->
-                <div class="oauthProvider" style="margin-bottom: 30px; padding: 20px; background: var(--SmartThemeBlurTintColor); border-radius: 8px;">
+                <div class="oauthProvider"
+                    style="margin-bottom: 30px; padding: 20px; background: var(--SmartThemeBlurTintColor); border-radius: 8px;">
                     <div class="flex-container alignItemsCenter" style="margin-bottom: 15px;">
-                        <i class="fa-brands fa-discord" style="font-size: 24px; margin-right: 10px; color: #5865F2;"></i>
+                        <i class="fa-brands fa-discord"
+                            style="font-size: 24px; margin-right: 10px; color: #5865F2;"></i>
                         <h4 style="margin: 0;">Discord OAuth</h4>
                     </div>
 
@@ -759,12 +817,14 @@
 
                         <div class="flex-container flexFlowColumn">
                             <small>Client ID:</small>
-                            <input type="text" class="text_pole" id="oauthDiscordClientId" placeholder="Discord Application Client ID">
+                            <input type="text" class="text_pole" id="oauthDiscordClientId"
+                                placeholder="Discord Application Client ID">
                         </div>
 
                         <div class="flex-container flexFlowColumn">
                             <small>Client Secret:</small>
-                            <input type="password" class="text_pole" id="oauthDiscordClientSecret" placeholder="Discord Application Client Secret">
+                            <input type="password" class="text_pole" id="oauthDiscordClientSecret"
+                                placeholder="Discord Application Client Secret">
                         </div>
 
                         <div class="flex-container flexFlowColumn">
@@ -773,14 +833,16 @@
                         </div>
 
                         <small style="color: var(--SmartThemeQuoteColor); margin-top: 5px;">
-                            在 <a href="https://discord.com/developers/applications" target="_blank">Discord Developer Portal</a> 创建应用获取凭据<br>
+                            在 <a href="https://discord.com/developers/applications" target="_blank">Discord Developer
+                                Portal</a> 创建应用获取凭据<br>
                             <strong>💡 提示：</strong>如果留空Callback URL，系统会自动根据当前服务器地址和端口生成回调URL，无需手动配置
                         </small>
                     </div>
                 </div>
 
                 <!-- Linux.do OAuth配置 -->
-                <div class="oauthProvider" style="margin-bottom: 30px; padding: 20px; background: var(--SmartThemeBlurTintColor); border-radius: 8px;">
+                <div class="oauthProvider"
+                    style="margin-bottom: 30px; padding: 20px; background: var(--SmartThemeBlurTintColor); border-radius: 8px;">
                     <div class="flex-container alignItemsCenter" style="margin-bottom: 15px;">
                         <i class="fa-brands fa-linux" style="font-size: 24px; margin-right: 10px; color: #FFA500;"></i>
                         <h4 style="margin: 0;">Linux.do OAuth</h4>
@@ -794,12 +856,14 @@
 
                         <div class="flex-container flexFlowColumn">
                             <small>Client ID:</small>
-                            <input type="text" class="text_pole" id="oauthLinuxdoClientId" placeholder="Linux.do Client ID">
+                            <input type="text" class="text_pole" id="oauthLinuxdoClientId"
+                                placeholder="Linux.do Client ID">
                         </div>
 
                         <div class="flex-container flexFlowColumn">
                             <small>Client Secret:</small>
-                            <input type="password" class="text_pole" id="oauthLinuxdoClientSecret" placeholder="Linux.do Client Secret">
+                            <input type="password" class="text_pole" id="oauthLinuxdoClientSecret"
+                                placeholder="Linux.do Client Secret">
                         </div>
 
                         <div class="flex-container flexFlowColumn">
@@ -809,17 +873,20 @@
 
                         <div class="flex-container flexFlowColumn">
                             <small>Auth URL:</small>
-                            <input type="text" class="text_pole" id="oauthLinuxdoAuthUrl" value="https://connect.linux.do/oauth2/authorize">
+                            <input type="text" class="text_pole" id="oauthLinuxdoAuthUrl"
+                                value="https://connect.linux.do/oauth2/authorize">
                         </div>
 
                         <div class="flex-container flexFlowColumn">
                             <small>Token URL:</small>
-                            <input type="text" class="text_pole" id="oauthLinuxdoTokenUrl" value="https://connect.linux.do/oauth2/token">
+                            <input type="text" class="text_pole" id="oauthLinuxdoTokenUrl"
+                                value="https://connect.linux.do/oauth2/token">
                         </div>
 
                         <div class="flex-container flexFlowColumn">
                             <small>UserInfo URL:</small>
-                            <input type="text" class="text_pole" id="oauthLinuxdoUserInfoUrl" value="https://connect.linux.do/oauth2/userinfo">
+                            <input type="text" class="text_pole" id="oauthLinuxdoUserInfoUrl"
+                                value="https://connect.linux.do/oauth2/userinfo">
                         </div>
 
                         <small style="color: var(--SmartThemeQuoteColor); margin-top: 5px;">
@@ -841,7 +908,8 @@
                     </button>
                 </div>
 
-                <div class="oauthConfigTips" style="margin-top: 20px; padding: 15px; background: var(--SmartThemeBlurTintColor); border-radius: 5px;">
+                <div class="oauthConfigTips"
+                    style="margin-top: 20px; padding: 15px; background: var(--SmartThemeBlurTintColor); border-radius: 5px;">
                     <h4>⚠️ 重要说明：</h4>
                     <ul style="padding-left: 20px;">
                         <li>配置将保存在 <code>config.yaml</code> 文件中</li>
@@ -850,6 +918,63 @@
                         <li>如果开启了邀请码注册，OAuth 登录的新用户也需要输入邀请码</li>
                         <li>建议在生产环境使用 HTTPS 以确保安全性</li>
                     </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 备份与恢复选项卡 -->
+    <div class="navTab backupRestoreBlock" style="display: none;">
+        <div class="flex-container flexFlowColumn flexGap10">
+            <h3 data-i18n="Backup and Restore">备份与恢复</h3>
+
+            <!-- 警告信息 -->
+            <div class="backup-warning"
+                style="background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; padding: 15px; margin-bottom: 15px;">
+                <h4 style="margin-top: 0; color: #856404;">
+                    <i class="fa-fw fa-solid fa-exclamation-triangle"></i>
+                    重要提示
+                </h4>
+                <ul style="margin: 5px 0; color: #856404; padding-left: 20px;">
+                    <li>备份包含所有用户数据、论坛数据、设置等</li>
+                    <li>恢复操作会覆盖现有数据，请谨慎操作</li>
+                    <li>恢复前会自动创建当前数据的备份</li>
+                    <li>恢复后需要重启服务才能生效</li>
+                </ul>
+            </div>
+
+            <!-- 创建备份 -->
+            <div class="createBackupSection"
+                style="padding: 20px; background: var(--SmartThemeBlurTintColor); border-radius: 10px; margin-bottom: 20px;">
+                <h4 style="margin-top: 0;">
+                    <i class="fa-fw fa-solid fa-box-archive"></i>
+                    创建备份
+                </h4>
+                <p style="opacity: 0.8; font-size: 0.9em; margin-bottom: 15px;">
+                    一键备份所有数据，包括用户数据、论坛数据、配置文件等。
+                </p>
+                <div class="flex-container flexGap10">
+                    <button type="button" class="menu_button menu_button_icon" id="createBackupBtn">
+                        <i class="fa-fw fa-solid fa-download"></i>
+                        <span>创建备份</span>
+                    </button>
+                    <button type="button" class="menu_button menu_button_icon" id="refreshBackupsBtn">
+                        <i class="fa-fw fa-solid fa-refresh"></i>
+                        <span>刷新列表</span>
+                    </button>
+                </div>
+                <div id="createBackupStatus" style="margin-top: 10px; display: none;"></div>
+            </div>
+
+            <!-- 备份列表 -->
+            <div class="backupListSection"
+                style="padding: 20px; background: var(--SmartThemeBlurTintColor); border-radius: 10px;">
+                <h4 style="margin-top: 0;">
+                    <i class="fa-fw fa-solid fa-list"></i>
+                    备份列表
+                </h4>
+                <div id="backupListContainer">
+                    <p style="opacity: 0.6; text-align: center;">正在加载备份列表...</p>
                 </div>
             </div>
         </div>

@@ -57,6 +57,7 @@ import { router as emailConfigRouter } from './endpoints/email-config.js';
 import { router as oauthRouter } from './endpoints/oauth.js';
 import { router as oauthConfigRouter } from './endpoints/oauth-config.js';
 import { router as scheduledTasksRouter } from './endpoints/scheduled-tasks.js';
+import { router as backupRouter } from './endpoints/backup.js';
 import { getConfigValue } from './util.js';
 
 /**
@@ -206,6 +207,7 @@ export function setupPrivateEndpoints(app) {
     app.use('/api/announcements', announcementsRouter);
     app.use('/api/public-config', publicConfigRouter);
     app.use('/api/scheduled-tasks', scheduledTasksRouter);
+    app.use('/api/admin/backup', backupRouter);
 }
 
 /**
