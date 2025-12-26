@@ -1906,12 +1906,14 @@ function initScheduledTasksHandlers(template) {
         }
     }
 
-    // 绑定备份相关事件
-    template.find('#createBackupBtn').on('click', createBackup);
-    template.find('#refreshBackupsBtn').on('click', loadBackupList);
+    // 绑定备份相关事件（使用事件委托）
+    template.on('click', '#createBackupBtn', createBackup);
+    template.on('click', '#refreshBackupsBtn', loadBackupList);
 
     // 切换到备份 tab 时加载列表
-    template.find('.backupRestoreButton').on('click', loadBackupList);
+    template.find('.backupRestoreButton').on('click', function () {
+        setTimeout(loadBackupList, 100); // 延迟加载，确保 tab 切换完成
+    });
 }
 
 /**
