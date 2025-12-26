@@ -23,7 +23,7 @@
         }
 
         body {
-            background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e);
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
             background-size: 400% 400%;
             animation: gradientBG 15s ease infinite;
             font-family: 'Noto Sans', sans-serif;
@@ -36,6 +36,7 @@
             align-items: center;
             position: relative;
             overflow-x: hidden;
+            overflow-y: auto;
         }
 
         /* 漂浮背景装饰 */
@@ -53,9 +54,10 @@
         .floating-icon {
             position: absolute;
             font-size: 4rem;
-            color: rgba(255, 255, 255, 0.03);
+            color: rgba(255, 255, 255, 0.15);
             animation: floatBackground 20s linear infinite;
             user-select: none;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
         }
 
         .floating-icon:nth-child(1) {
@@ -410,6 +412,7 @@
     <div class="welcome-container">
         <div class="hero-section">
             <h1>欢迎来到 SillyTavern</h1>
+            <small style="opacity: 0.6; font-size: 0.9rem; display: block; margin-bottom: 10px;">由 Henry 制作</small>
             <p>强大的AI聊天前端，支持多种大语言模型，为您提供最佳的AI对话体验</p>
             <div class="cta-buttons">
                 <a href="#" class="cta-button cta-primary" id="enterHomeBtn" onclick="goToHome()">
