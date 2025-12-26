@@ -341,10 +341,9 @@
     <script>
         async function goToHome() {
             try {
-                // 检查登录状态
+                // 检查登录状态 (使用 GET 方法，不需要 CSRF 令牌)
                 const response = await fetch('/api/users/me', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    method: 'GET',
                     credentials: 'same-origin'  // 发送 cookie 以验证登录状态
                 });
                 if (response.ok) {
