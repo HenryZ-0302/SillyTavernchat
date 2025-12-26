@@ -232,6 +232,9 @@ function redirectToHome() {
     // Set the pathname to root and keep the updated query string
     currentUrl.pathname = '/';
 
+    // Add a random parameter to bypass cache
+    currentUrl.searchParams.set('t', String(Date.now()));
+
     // Redirect to the new URL
     window.location.href = currentUrl.toString();
 }
