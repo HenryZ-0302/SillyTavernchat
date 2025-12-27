@@ -334,11 +334,21 @@ router.post('/restore', async (req, res) => {
             const fileBuffer = await file.buffer();
             fs.writeFileSync(targetPath, fileBuffer);
 
-            // 如果是 config.yaml，同时保存到 data 目录作为持久化备份
+            // 如果是 config.yaml，同时保存到 data 目录和 config 目录作为持久化备份
             if (alsoSaveToData) {
+                // 保存到 data 目录
                 const dataConfigPath = path.join(dataRoot, 'config.yaml');
                 fs.writeFileSync(dataConfigPath, fileBuffer);
                 console.log(color.blue(`[Backup] config.yaml 已同步保存到 data 目录: ${dataConfigPath}`));
+
+                // 保存到 config 目录 (Zeabur 持久化挂载点)
+                const configDirPath = path.join(process.cwd(), 'config', 'config.yaml');
+                const configDir = path.dirname(configDirPath);
+                if (!fs.existsSync(configDir)) {
+                    fs.mkdirSync(configDir, { recursive: true });
+                }
+                fs.writeFileSync(configDirPath, fileBuffer);
+                console.log(color.blue(`[Backup] config.yaml 已同步保存到 config 目录: ${configDirPath}`));
             }
         }
 
