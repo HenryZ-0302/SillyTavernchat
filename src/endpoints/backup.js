@@ -268,27 +268,42 @@ router.post('/restore', async (req, res) => {
         await preArchive.finalize();
         await preArchiveFinished;
 
-        // 2. 解压恢复备份
-        // 使用 unzipper 解压
-        const unzipper = await import('unzipper');
-        const extractPath = dataRoot;
-
-        // 清除现有数据（除了备份目录）
-        console.log(color.yellow(`[Backup] 清除现有数据...`));
-        for (const entry of entries) {
-            if (entry === BACKUPS_DIR) continue;
-            const entryPath = path.join(dataRoot, entry);
-            fs.rmSync(entryPath, { recursive: true, force: true });
-        }
-
         // 解压备份
         console.log(color.blue(`[Backup] 解压备份文件...`));
-        await new Promise((resolve, reject) => {
-            fs.createReadStream(backupPath)
-                .pipe(unzipper.Extract({ path: extractPath }))
-                .on('close', resolve)
-                .on('error', reject);
-        });
+
+        // 使用 unzipper 解析 zip 内容
+        const unzipperImport = await import('unzipper');
+        const unzipper = unzipperImport.default || unzipperImport;
+        const directory = await unzipper.Open.file(backupPath);
+
+        for (const file of directory.files) {
+            // 跳过备份目录本身
+            if (file.path.startsWith(BACKUPS_DIR)) continue;
+
+            let targetPath;
+            if (file.path === 'config.yaml') {
+                targetPath = path.join(process.cwd(), 'config.yaml');
+            } else {
+                targetPath = path.join(dataRoot, file.path);
+            }
+
+            // 确保目标目录存在
+            const targetDir = path.dirname(targetPath);
+            if (!fs.existsSync(targetDir)) {
+                fs.mkdirSync(targetDir, { recursive: true });
+            }
+
+            // 如果是目录，跳过
+            if (file.type === 'Directory') continue;
+
+            // 流式解压单个文件
+            await new Promise((resolve, reject) => {
+                file.stream()
+                    .pipe(fs.createWriteStream(targetPath))
+                    .on('finish', resolve)
+                    .on('error', reject);
+            });
+        }
 
         console.log(color.green(`[Backup] 恢复完成！需要重启服务以应用配置更改。`));
 
