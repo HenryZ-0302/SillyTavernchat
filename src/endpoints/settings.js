@@ -218,7 +218,9 @@ router.post('/get', (request, response) => {
         const pathToSettings = path.join(request.user.directories.root, SETTINGS_FILE);
         settings = fs.readFileSync(pathToSettings, 'utf8');
     } catch (e) {
-        return response.sendStatus(500);
+        // Emergency fallback: Return empty settings if file is corrupted or missing
+        console.warn('Failed to load settings.json, falling back to usage defaults.', e);
+        settings = '{}';
     }
 
     // NovelAI Settings
