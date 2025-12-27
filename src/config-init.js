@@ -170,14 +170,28 @@ export function addMissingConfigValues(configPath) {
         const configDirPath = path.join(serverDirectory, 'config', 'config.yaml');
         const dataConfigPath = path.join(globalThis.DATA_ROOT || './data', 'config.yaml');
 
-        // 辅助函数：从持久化备份恢复
+        // 辅助函数：检查文件是否有效（存在且内容不为空）
+        const isValidConfigFile = (filePath) => {
+            if (!fs.existsSync(filePath)) return false;
+            try {
+                const content = fs.readFileSync(filePath, 'utf8');
+                if (!content || content.trim().length === 0) return false;
+                // 尝试解析，确保不是损坏的 YAML
+                const parsed = yaml.parse(content);
+                return parsed && typeof parsed === 'object';
+            } catch {
+                return false;
+            }
+        };
+
+        // 辅助函数：从持久化备份恢复（只使用有效的备份）
         const restoreFromBackup = () => {
-            if (fs.existsSync(configDirPath)) {
+            if (isValidConfigFile(configDirPath)) {
                 console.warn(color.yellow(`Restoring config.yaml from config directory: ${configDirPath}`));
                 fs.copyFileSync(configDirPath, configPath);
                 return true;
             }
-            if (fs.existsSync(dataConfigPath)) {
+            if (isValidConfigFile(dataConfigPath)) {
                 console.warn(color.yellow(`Restoring config.yaml from data directory: ${dataConfigPath}`));
                 fs.copyFileSync(dataConfigPath, configPath);
                 return true;
