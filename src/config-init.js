@@ -199,13 +199,28 @@ export function addMissingConfigValues(configPath) {
             return false;
         };
 
+        // ===== 简化的 config 同步逻辑 =====
+        // 优先使用持久化目录的 config（用户编辑的位置）
+        // 如果持久化目录有有效的 config.yaml，就复制到根目录使用
+
+        if (isValidConfigFile(configDirPath)) {
+            // 持久化目录有有效配置，复制到根目录
+            console.log(color.green(`[Config] 使用持久化目录的配置: ${configDirPath}`));
+            fs.copyFileSync(configDirPath, configPath);
+            return;
+        }
+
+        if (isValidConfigFile(dataConfigPath)) {
+            // data 目录有有效配置（备份恢复后的），复制到根目录
+            console.log(color.green(`[Config] 使用 data 目录的配置: ${dataConfigPath}`));
+            fs.copyFileSync(dataConfigPath, configPath);
+            return;
+        }
+
+        // 如果都没有有效配置，检查根目录的
         if (!fs.existsSync(configPath)) {
-            // config.yaml 不存在，尝试从持久化备份恢复
-            if (restoreFromBackup()) {
-                return;
-            }
-            // 没有备份，从默认配置创建
-            console.warn(color.yellow(`Warning: config.yaml not found at ${configPath}. Creating a new one with default values.`));
+            // 根目录也没有，从默认配置创建
+            console.warn(color.yellow(`[Config] 未找到配置文件，使用默认配置`));
             fs.writeFileSync(configPath, yaml.stringify(defaultConfig));
             return;
         }
