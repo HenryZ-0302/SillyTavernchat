@@ -2016,14 +2016,12 @@ function initScheduledTasksHandlers(template) {
 
             const data = await response.json();
 
-            await Swal.fire({
-                title: '恢复完成',
-                html: `
-                    恢复前的数据已备份为: <code>${data.preRestoreBackup}</code><br><br>
-                    <strong>请重启服务以应用配置更改。</strong>
-                `,
-                icon: 'success'
-            });
+            await callGenericPopup(
+                `恢复完成。<br><br>恢复前的数据已备份为: <code>${data.preRestoreBackup}</code><br><br><strong>请重启服务以应用配置更改。</strong>`,
+                POPUP_TYPE.TEXT,
+                '',
+                { okButton: '确定' }
+            );
 
             await loadBackupList();
 
