@@ -171,7 +171,30 @@ export function addMissingConfigValues(configPath) {
             return;
         }
 
-        let config = yaml.parse(fs.readFileSync(configPath, 'utf8'));
+        // Check if config file is empty or invalid
+        const configContent = fs.readFileSync(configPath, 'utf8');
+        if (!configContent || configContent.trim().length === 0) {
+            console.warn(color.yellow(`Warning: config.yaml at ${configPath} is empty. Restoring from default values.`));
+            fs.writeFileSync(configPath, yaml.stringify(defaultConfig));
+            return;
+        }
+
+        let config;
+        try {
+            config = yaml.parse(configContent);
+        } catch (parseError) {
+            console.error(color.red(`Error: config.yaml at ${configPath} is corrupted. Restoring from default values.`));
+            console.error(parseError.message);
+            fs.writeFileSync(configPath, yaml.stringify(defaultConfig));
+            return;
+        }
+
+        // If parsed config is null/undefined (empty YAML), restore from default
+        if (!config || typeof config !== 'object') {
+            console.warn(color.yellow(`Warning: config.yaml at ${configPath} has invalid content. Restoring from default values.`));
+            fs.writeFileSync(configPath, yaml.stringify(defaultConfig));
+            return;
+        }
 
         // Migrate old keys to new keys
         const migratedKeys = [];
