@@ -332,6 +332,27 @@ router.post('/restore', async (req, res) => {
 
             // 流式解压单个文件
             const fileBuffer = await file.buffer();
+
+            // 如果是 config.yaml，先验证内容是否有效
+            if (file.path === 'config.yaml') {
+                const configContent = fileBuffer.toString('utf8');
+                let isValidConfig = false;
+                try {
+                    if (configContent && configContent.trim().length > 0) {
+                        const yaml = require('yaml');
+                        const parsed = yaml.parse(configContent);
+                        isValidConfig = parsed && typeof parsed === 'object';
+                    }
+                } catch {
+                    isValidConfig = false;
+                }
+
+                if (!isValidConfig) {
+                    console.warn(color.yellow(`[Backup] 备份中的 config.yaml 无效，跳过覆盖，保留当前配置`));
+                    continue; // 跳过这个文件，不覆盖
+                }
+            }
+
             fs.writeFileSync(targetPath, fileBuffer);
 
             // 如果是 config.yaml，同时保存到 data 目录和 config 目录作为持久化备份
