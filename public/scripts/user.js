@@ -1930,58 +1930,72 @@ function initScheduledTasksHandlers(template) {
      * 恢复备份
      */
     async function restoreBackup(filename) {
-        // 使用 ST 原生 Popup，提供两个按钮选择恢复模式
+        // 使用 ST 原生 Popup，手动实现 Checkbox 逻辑以确保兼容性
+        let isCleanRestore = false;
+
         const popup = new Popup(
             `确定要恢复备份文件 <code>${filename}</code> 吗？<br><br>
             <div style="background: var(--SmartThemeBlurTintColor); padding: 10px; border-radius: 5px; margin: 10px 0;">
-                <p style="margin: 0; font-size: 0.9em;">
-                    <i class="fa-solid fa-triangle-exclamation"></i> <strong>注意：</strong> 
-                    恢复操作需要重启服务。请选择恢复模式：
+                <label style="display: flex; align-items: center; cursor: pointer; font-size: 1.1em; user-select: none;">
+                    <input type="checkbox" id="restore_clean_mode_checkbox" style="width: 18px; height: 18px; margin-right: 10px;">
+                    <span style="font-weight: bold; color: #dc3545;">开启清空模式 (Clean Restore)</span>
+                </label>
+                <p style="margin: 5px 0 0 28px; font-size: 0.85em; opacity: 0.8;">
+                    <i class="fa-solid fa-triangle-exclamation"></i> 
+                    先清空所有数据（保留 config.yaml）再恢复。<br>
+                    <strong>修复严重问题时使用。</strong>
                 </p>
-                <ul style="margin: 5px 0 0 20px; font-size: 0.85em; opacity: 0.9;">
-                    <li><strong>普通恢复：</strong> 覆盖现有文件（推荐）</li>
-                    <li><strong>清空恢复：</strong> 先删除所有数据再恢复（修复严重问题用）</li>
-                </ul>
+            </div>
+            <div style="margin-top: 10px; font-size: 0.9em;">
+                提示：恢复操作会自动重启服务。
             </div>`,
             POPUP_TYPE.CONFIRM,
             '',
             {
-                okButton: '普通恢复 (覆盖)',
+                okButton: '开始恢复',
                 cancelButton: '取消',
-                customButtons: [
-                    {
-                        text: '💥 清空并恢复',
-                        appendAtEnd: true,
-                        result: 'clean_restore',
-                        classes: ['menu_button_error'] // 红色警告样式
+                onOpen: (dom) => {
+                    // 这里的 dom 是 popup 实例
+                    const checkbox = dom.dlg.querySelector('#restore_clean_mode_checkbox');
+                    if (checkbox) {
+                        checkbox.addEventListener('change', (e) => {
+                            isCleanRestore = e.target.checked;
+                            // 可选：改变按钮颜色以示警告
+                            const okBtn = dom.okButton;
+                            if (isCleanRestore) {
+                                okBtn.classList.add('menu_button_error');
+                                okBtn.textContent = '确认清空并恢复';
+                            } else {
+                                okBtn.classList.remove('menu_button_error');
+                                okBtn.textContent = '开始恢复';
+                            }
+                        });
                     }
-                ]
+                }
             }
         );
 
         const result = await popup.show();
 
-        if (result !== POPUP_RESULT.AFFIRMATIVE && result !== 'clean_restore') {
+        if (result !== POPUP_RESULT.AFFIRMATIVE) {
             return;
         }
 
-        const cleanRestore = (result === 'clean_restore');
-
         // 如果开启了清空模式，进行二次确认
-        if (cleanRestore) {
+        if (isCleanRestore) {
             const doubleConfirm = await callGenericPopup(
                 `<h3><i class="fa-solid fa-radiation" style="color: #dc3545;"></i> 最终确认</h3>
-                <p>你点击了 <strong>清空并恢复</strong>。</p>
+                <p>你依然选择了 <strong>清空模式</strong>。</p>
                 <p>这将 <span style="color: #dc3545; font-weight: bold;">删除所有现有数据</span>（config.yaml 等除外），然后从备份恢复。</p>
-                <p>确定要继续吗？此操作不可逆！</p>`,
+                <p>确定要继续吗？</p>`,
                 POPUP_TYPE.CONFIRM,
                 '',
-                { okButton: '确定清空并恢复', cancelButton: '我后悔了' }
+                { okButton: '我确定，清空吧', cancelButton: '我后悔了' }
             );
             if (doubleConfirm !== POPUP_RESULT.AFFIRMATIVE) return;
         }
 
-        const clearData = cleanRestore;
+        const clearData = isCleanRestore;
         toastr.info('正在恢复备份，请稍候...');
 
         try {
