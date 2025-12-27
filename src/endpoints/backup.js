@@ -282,9 +282,10 @@ router.post('/restore', async (req, res) => {
                 'node_modules',
                 'package.json',
                 'package-lock.json',
-                'config.yaml', // 配置文件保留，解压时如果 zip 里有会覆盖
-                'public', // 前端静态文件，一般不建议删，除非确定 zip 里包含完整的 public
-                'src',    // 源代码
+                'config.yaml', // 配置文件保留
+                'config',      // 配置目录保留（Zeabur 可能挂载在这里）
+                'public',      // 前端静态文件
+                'src',         // 源代码
             ];
 
             const entries = fs.readdirSync(dataRoot);
