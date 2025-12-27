@@ -352,6 +352,31 @@ router.post('/restore', async (req, res) => {
             }
         }
 
+        // 恢复完成后，验证 config.yaml 是否有效
+        const configPath = path.join(process.cwd(), 'config.yaml');
+        const defaultConfigPath = path.join(process.cwd(), 'default', 'config.yaml');
+
+        const isConfigValid = () => {
+            if (!fs.existsSync(configPath)) return false;
+            try {
+                const content = fs.readFileSync(configPath, 'utf8');
+                if (!content || content.trim().length === 0) return false;
+                const yaml = require('yaml');
+                const parsed = yaml.parse(content);
+                return parsed && typeof parsed === 'object';
+            } catch {
+                return false;
+            }
+        };
+
+        if (!isConfigValid()) {
+            console.warn(color.yellow(`[Backup] 恢复后 config.yaml 无效，从默认配置恢复...`));
+            if (fs.existsSync(defaultConfigPath)) {
+                fs.copyFileSync(defaultConfigPath, configPath);
+                console.log(color.green(`[Backup] 已从默认配置恢复 config.yaml`));
+            }
+        }
+
         console.log(color.green(`[Backup] 恢复完成！需要重启服务以应用配置更改。`));
 
         res.json({
