@@ -1935,8 +1935,8 @@ function initScheduledTasksHandlers(template) {
 
         const popup = new Popup(
             `确定要恢复备份文件 <code>${filename}</code> 吗？<br><br>
-            <div style="background: var(--SmartThemeBlurTintColor); padding: 10px; border-radius: 5px; margin: 10px 0;">
-                <label style="display: flex; align-items: center; cursor: pointer; font-size: 1.1em; user-select: none;">
+            <div style="background: var(--SmartThemeBlurTintColor); padding: 10px; border-radius: 5px; margin: 10px 0; text-align: center;">
+                <label style="display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.1em; user-select: none;">
                     <input type="checkbox" id="restore_clean_mode_checkbox" style="width: 18px; height: 18px; margin-right: 10px;">
                     <span style="font-weight: bold; color: #dc3545;">开启清空模式 (Clean Restore)</span>
                 </label>

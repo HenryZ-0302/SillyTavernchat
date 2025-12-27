@@ -6212,3 +6212,8 @@ body:not(.movingUI) .drawer-content.maximized {
     color: #fff;
     margin-left: 5px;
 }
+
+#backupListContainer {
+    max-width: 800px;
+    margin: 0 auto;
+}
