@@ -308,13 +308,15 @@ router.post('/restore', async (req, res) => {
         const directory = await unzipper.Open.file(backupPath);
 
         for (const file of directory.files) {
-            // ... (keep existing logic)
             // 跳过备份目录本身
             if (file.path.startsWith(BACKUPS_DIR)) continue;
 
             let targetPath;
+            let alsoSaveToData = false; // 是否同时保存到 data 目录
+
             if (file.path === 'config.yaml') {
                 targetPath = path.join(process.cwd(), 'config.yaml');
+                alsoSaveToData = true; // config.yaml 需要同时保存到 data 目录作为持久化备份
             } else {
                 targetPath = path.join(dataRoot, file.path);
             }
@@ -329,12 +331,15 @@ router.post('/restore', async (req, res) => {
             if (file.type === 'Directory') continue;
 
             // 流式解压单个文件
-            await new Promise((resolve, reject) => {
-                file.stream()
-                    .pipe(fs.createWriteStream(targetPath))
-                    .on('finish', resolve)
-                    .on('error', reject);
-            });
+            const fileBuffer = await file.buffer();
+            fs.writeFileSync(targetPath, fileBuffer);
+
+            // 如果是 config.yaml，同时保存到 data 目录作为持久化备份
+            if (alsoSaveToData) {
+                const dataConfigPath = path.join(dataRoot, 'config.yaml');
+                fs.writeFileSync(dataConfigPath, fileBuffer);
+                console.log(color.blue(`[Backup] config.yaml 已同步保存到 data 目录: ${dataConfigPath}`));
+            }
         }
 
         console.log(color.green(`[Backup] 恢复完成！需要重启服务以应用配置更改。`));

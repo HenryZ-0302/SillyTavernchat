@@ -165,7 +165,17 @@ export function addMissingConfigValues(configPath) {
     try {
         const defaultConfig = yaml.parse(fs.readFileSync(path.join(serverDirectory, './default/config.yaml'), 'utf8'));
 
+        // 首先检查 data 目录下是否有持久化的 config.yaml 备份
+        const dataConfigPath = path.join(globalThis.DATA_ROOT || './data', 'config.yaml');
+
         if (!fs.existsSync(configPath)) {
+            // config.yaml 不存在，检查 data 目录下是否有备份
+            if (fs.existsSync(dataConfigPath)) {
+                console.warn(color.yellow(`Warning: config.yaml not found at ${configPath}. Restoring from data directory backup.`));
+                fs.copyFileSync(dataConfigPath, configPath);
+                return;
+            }
+            // 没有备份，从默认配置创建
             console.warn(color.yellow(`Warning: config.yaml not found at ${configPath}. Creating a new one with default values.`));
             fs.writeFileSync(configPath, yaml.stringify(defaultConfig));
             return;
@@ -174,6 +184,12 @@ export function addMissingConfigValues(configPath) {
         // Check if config file is empty or invalid
         const configContent = fs.readFileSync(configPath, 'utf8');
         if (!configContent || configContent.trim().length === 0) {
+            // 优先从 data 目录恢复
+            if (fs.existsSync(dataConfigPath)) {
+                console.warn(color.yellow(`Warning: config.yaml at ${configPath} is empty. Restoring from data directory backup.`));
+                fs.copyFileSync(dataConfigPath, configPath);
+                return;
+            }
             console.warn(color.yellow(`Warning: config.yaml at ${configPath} is empty. Restoring from default values.`));
             fs.writeFileSync(configPath, yaml.stringify(defaultConfig));
             return;
@@ -183,6 +199,12 @@ export function addMissingConfigValues(configPath) {
         try {
             config = yaml.parse(configContent);
         } catch (parseError) {
+            // 优先从 data 目录恢复
+            if (fs.existsSync(dataConfigPath)) {
+                console.error(color.red(`Error: config.yaml at ${configPath} is corrupted. Restoring from data directory backup.`));
+                fs.copyFileSync(dataConfigPath, configPath);
+                return;
+            }
             console.error(color.red(`Error: config.yaml at ${configPath} is corrupted. Restoring from default values.`));
             console.error(parseError.message);
             fs.writeFileSync(configPath, yaml.stringify(defaultConfig));
@@ -191,6 +213,12 @@ export function addMissingConfigValues(configPath) {
 
         // If parsed config is null/undefined (empty YAML), restore from default
         if (!config || typeof config !== 'object') {
+            // 优先从 data 目录恢复
+            if (fs.existsSync(dataConfigPath)) {
+                console.warn(color.yellow(`Warning: config.yaml at ${configPath} has invalid content. Restoring from data directory backup.`));
+                fs.copyFileSync(dataConfigPath, configPath);
+                return;
+            }
             console.warn(color.yellow(`Warning: config.yaml at ${configPath} has invalid content. Restoring from default values.`));
             fs.writeFileSync(configPath, yaml.stringify(defaultConfig));
             return;
