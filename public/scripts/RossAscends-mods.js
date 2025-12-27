@@ -41,7 +41,7 @@ import { debounce_timeout } from './constants.js';
 
 import { Popup } from './popup.js';
 import { accountStorage } from './util/AccountStorage.js';
-import { getCurrentUserHandle } from './user.js?v=fixed_restore_v2';
+import { getCurrentUserHandle } from './user.js?v=fixed_restore_v3';
 import { kai_settings } from './kai-settings.js';
 
 var RPanelPin = document.getElementById('rm_button_panel_pin');
