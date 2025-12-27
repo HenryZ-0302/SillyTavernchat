@@ -1687,75 +1687,123 @@ function initScheduledTasksHandlers(template) {
 
     // ========== 备份与恢复功能 ==========
 
+    // 自动清理开关复选框事件
+    template.on('change', '#autoCleanupBackups', function () {
+        const isChecked = $(this).is(':checked');
+        localStorage.setItem('backup_auto_clean', isChecked);
+    });
+
+    // 立即清理按钮事件
+    template.on('click', '#cleanOldBackupsBtn', cleanOldBackups);
+
+    /**
+     * 清理过期备份
+     */
+    async function cleanOldBackups() {
+        const confirm = await callGenericPopup(
+            '确定要立即清理所有 30 天前的备份文件吗？此操作不可恢复。',
+            POPUP_TYPE.CONFIRM,
+            '',
+            { okButton: '立即清理', cancelButton: '取消' }
+        );
+
+        if (confirm !== POPUP_RESULT.AFFIRMATIVE) return;
+
+        try {
+            const response = await fetch('/api/admin/backup/cleanup', {
+                method: 'POST',
+                headers: getRequestHeaders(),
+                body: JSON.stringify({ days: 30 }),
+            });
+
+            if (!response.ok) throw new Error('清理请求失败');
+
+            const data = await response.json();
+            toastr.success(data.message);
+            await loadBackupList();
+
+        } catch (error) {
+            console.error('Cleanup failed:', error);
+            toastr.error('清理失败: ' + error.message);
+        }
+    }
+
     /**
      * 加载备份列表
      */
     async function loadBackupList() {
         const container = template.find('#backupListContainer');
-        container.html('<p style="opacity: 0.6; text-align: center;">正在加载备份列表...</p>');
+
+        // 恢复自动清理开关的状态
+        const autoClean = localStorage.getItem('backup_auto_clean') === 'true';
+        template.find('#autoCleanupBackups').prop('checked', autoClean);
 
         try {
             const response = await fetch('/api/admin/backup/list', {
+                method: 'GET',
                 headers: getRequestHeaders(),
             });
 
             if (!response.ok) {
-                throw new Error('加载备份列表失败');
+                throw new Error('无法加载备份列表');
             }
 
             const data = await response.json();
-            const backups = data.backups || [];
+            const backups = data.backups;
 
             if (backups.length === 0) {
                 container.html('<p style="opacity: 0.6; text-align: center;">暂无备份文件</p>');
                 return;
             }
 
-            let html = '<div class="backupList" style="display: flex; flex-direction: column; gap: 10px;">';
-            for (const backup of backups) {
-                const sizeStr = formatFileSize(backup.size);
-                const dateStr = new Date(backup.created).toLocaleString('zh-CN');
+            let html = '<div class="list-group">';
+            backups.forEach(backup => {
+                const size = formatFileSize(backup.size);
+                const date = new Date(backup.created).toLocaleString();
+
+                // 智能标注
+                let typeBadge = '<span class="be-badge">手动</span>';
+                if (backup.filename.startsWith('pre-restore-')) {
+                    typeBadge = '<span class="be-badge" style="background-color: #17a2b8;">自动</span>';
+                }
+
                 html += `
-                    <div class="backupItem" style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--SmartThemeChatTintColor); border-radius: 8px; border: 1px solid var(--SmartThemeBorderColor);">
-                        <div style="flex: 1;">
-                            <div style="font-weight: 600; margin-bottom: 4px;">${backup.filename}</div>
-                            <div style="font-size: 0.85em; opacity: 0.7;">${dateStr} · ${sizeStr}</div>
+                    <div class="list-group-item flex-container justifyContentSpaceBetween alignItemsCenter" style="padding: 10px; border-bottom: 1px solid var(--SmartThemeBorderColor);">
+                        <div class="flex-container flexFlowColumn">
+                            <div class="flex-container alignItemsCenter flexGap5">
+                                <strong>${backup.filename}</strong>
+                                ${typeBadge}
+                            </div>
+                            <small style="opacity: 0.7;">${date} | ${size}</small>
                         </div>
-                        <div style="display: flex; gap: 8px;">
-                            <button type="button" class="menu_button downloadBackupBtn" data-filename="${backup.filename}" title="下载备份">
+                        <div class="flex-container flexGap10">
+                            <a href="/api/admin/backup/download/${backup.filename}" class="menu_button menu_button_icon" title="下载" target="_blank">
                                 <i class="fa-fw fa-solid fa-download"></i>
+                            </a>
+                            <button class="menu_button menu_button_icon restore-backup-btn" data-filename="${backup.filename}" title="恢复">
+                                <i class="fa-fw fa-solid fa-rotate-left"></i>
                             </button>
-                            <button type="button" class="menu_button restoreBackupBtn" data-filename="${backup.filename}" title="恢复备份">
-                                <i class="fa-fw fa-solid fa-upload"></i>
-                            </button>
-                            <button type="button" class="menu_button warning deleteBackupBtn" data-filename="${backup.filename}" title="删除备份">
+                            <button class="menu_button menu_button_icon delete-backup-btn" data-filename="${backup.filename}" title="删除" style="color: #dc3545;">
                                 <i class="fa-fw fa-solid fa-trash"></i>
                             </button>
                         </div>
                     </div>
                 `;
-            }
+            });
             html += '</div>';
+
             container.html(html);
 
-            // 绑定按钮事件
-            container.find('.downloadBackupBtn').on('click', function () {
-                const filename = $(this).data('filename');
-                window.location.href = `/api/admin/backup/download/${encodeURIComponent(filename)}`;
+            // 绑定列表项按钮事件
+            container.find('.delete-backup-btn').on('click', function () {
+                deleteBackup($(this).data('filename'));
             });
-
-            container.find('.restoreBackupBtn').on('click', async function () {
-                const filename = $(this).data('filename');
-                await restoreBackup(filename);
-            });
-
-            container.find('.deleteBackupBtn').on('click', async function () {
-                const filename = $(this).data('filename');
-                await deleteBackup(filename);
+            container.find('.restore-backup-btn').on('click', function () {
+                restoreBackup($(this).data('filename'));
             });
 
         } catch (error) {
-            console.error('Error loading backup list:', error);
+            console.error('Error loading backups:', error);
             container.html(`<p style="color: #dc3545; text-align: center;">加载失败: ${error.message}</p>`);
         }
     }
@@ -1766,7 +1814,7 @@ function initScheduledTasksHandlers(template) {
     function formatFileSize(bytes) {
         if (bytes === 0) return '0 B';
         const k = 1024;
-        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
@@ -1775,11 +1823,35 @@ function initScheduledTasksHandlers(template) {
      * 创建备份
      */
     async function createBackup() {
+        const createBtn = template.find('#createBackupBtn');
         const statusDiv = template.find('#createBackupStatus');
-        statusDiv.css({ 'background': '#d1ecf1', 'color': '#0c5460', 'padding': '10px', 'border-radius': '5px' })
-            .text('正在创建备份，请稍候...').show();
+
+        // 检查是否需要自动清理
+        const autoClean = template.find('#autoCleanupBackups').is(':checked');
+
+        createBtn.prop('disabled', true).find('span').text('正在创建...');
+        statusDiv.show().css({ 'background': '#fff3cd', 'color': '#856404' })
+            .html('<i class="fa-solid fa-spinner fa-spin"></i> 正在处理...');
 
         try {
+            // 如果开启了自动清理，先执行清理
+            if (autoClean) {
+                statusDiv.html('<i class="fa-solid fa-broom"></i> 正在清理旧备份...');
+                const cleanRes = await fetch('/api/admin/backup/cleanup', {
+                    method: 'POST',
+                    headers: getRequestHeaders(),
+                    body: JSON.stringify({ days: 30 }),
+                });
+                if (cleanRes.ok) {
+                    const cleanData = await cleanRes.json();
+                    if (cleanData.deletedCount > 0) {
+                        toastr.info(cleanData.message);
+                    }
+                }
+            }
+
+            // 创建新备份
+            statusDiv.html('<i class="fa-solid fa-file-zipper"></i> 正在打包数据...');
             const response = await fetch('/api/admin/backup/create', {
                 method: 'POST',
                 headers: getRequestHeaders(),
@@ -1791,18 +1863,31 @@ function initScheduledTasksHandlers(template) {
             }
 
             const data = await response.json();
-            statusDiv.css({ 'background': '#d4edda', 'color': '#155724' })
-                .text(`✓ 备份创建成功: ${data.filename}`);
+
+            // 显示成功信息和下载按钮
+            const successHtml = `
+                <div class="flex-container alignItemsCenter justifyContentSpaceBetween">
+                    <span>✓ 备份创建成功: ${data.filename}</span>
+                    <a href="/api/admin/backup/download/${data.filename}" class="menu_button" style="padding: 2px 8px; font-size: 0.9em;">
+                        <i class="fa-solid fa-download"></i> 立即下载
+                    </a>
+                </div>
+            `;
+
+            statusDiv.css({ 'background': '#d4edda', 'color': '#155724' }).html(successHtml);
 
             // 刷新列表
             await loadBackupList();
 
-            setTimeout(() => statusDiv.fadeOut(), 5000);
+            // 5秒后淡出，除非用户鼠标悬停（略，简单处理）
+            // setTimeout(() => statusDiv.fadeOut(), 10000); 
 
         } catch (error) {
             console.error('Error creating backup:', error);
             statusDiv.css({ 'background': '#f8d7da', 'color': '#721c24' })
                 .text(`✗ 创建失败: ${error.message}`);
+        } finally {
+            createBtn.prop('disabled', false).find('span').text('创建备份');
         }
     }
 
@@ -1845,33 +1930,54 @@ function initScheduledTasksHandlers(template) {
      * 恢复备份
      */
     async function restoreBackup(filename) {
-        // 第一次确认
-        const confirm1 = await callGenericPopup(
-            `<strong>⚠️ 警告：恢复操作会覆盖所有现有数据！</strong><br><br>
-             要恢复的备份: <code>${filename}</code><br><br>
-             恢复前会自动创建当前数据的备份。<br>
-             恢复完成后需要<strong>重启服务</strong>才能生效。<br><br>
-             确定要继续吗？`,
-            POPUP_TYPE.CONFIRM,
-            '',
-            { okButton: '继续', cancelButton: '取消' }
-        );
+        // 使用 SweetAlert2 自定义 HTML 来提供“清空模式”选项
+        const result = await Swal.fire({
+            title: '恢复备份',
+            html: `
+                <div style="text-align: left; font-size: 0.95em;">
+                    <p><strong>即将恢复:</strong> <code>${filename}</code></p>
+                    <div style="background: var(--SmartThemeBlurTintColor); padding: 10px; border-radius: 5px; margin: 10px 0;">
+                        <label class="checkbox_label">
+                            <input type="checkbox" id="swal-input-cleardata">
+                            <span style="font-weight: bold; color: #dc3545;">清空模式 (Clean Restore)</span>
+                        </label>
+                        <p style="margin: 5px 0 0 25px; font-size: 0.85em; opacity: 0.8;">
+                            勾选后，会在恢复前<b>清空所有现有数据</b>。<br>
+                            未勾选则仅覆盖同名文件 (默认安全模式)。
+                        </p>
+                    </div>
+                    <p style="margin-top: 10px; font-style: italic; opacity: 0.7;">
+                        * 无论选哪种模式，系统都会先自动备份当前数据。
+                    </p>
+                </div>
+            `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: '开始恢复',
+            cancelButtonText: '取消',
+            focusConfirm: false,
+            preConfirm: () => {
+                return {
+                    clearData: document.getElementById('swal-input-cleardata').checked
+                }
+            }
+        });
 
-        if (confirm1 !== POPUP_RESULT.AFFIRMATIVE) {
-            return;
-        }
+        if (!result.isConfirmed) return;
 
-        // 第二次确认
-        const inputResult = await callGenericPopup(
-            '请输入 <code>CONFIRM_RESTORE</code> 确认恢复操作:',
-            POPUP_TYPE.INPUT,
-            '',
-            { okButton: '恢复', cancelButton: '取消' }
-        );
+        const clearData = result.value.clearData;
 
-        if (inputResult !== 'CONFIRM_RESTORE') {
-            toastr.warning('确认文本不匹配，已取消恢复');
-            return;
+        // 二次确认，如果是清空模式
+        if (clearData) {
+            const doubleConfirm = await Swal.fire({
+                title: '最终确认',
+                text: '您选择了“清空模式”。现有数据将被全部清除（已自动备份）。确定要继续吗？',
+                icon: 'error',
+                showCancelButton: true,
+                confirmButtonText: '确定清空并恢复',
+                cancelButtonText: '取消'
+            });
+            if (!doubleConfirm.isConfirmed) return;
         }
 
         toastr.info('正在恢复备份，请稍候...');
@@ -1880,7 +1986,11 @@ function initScheduledTasksHandlers(template) {
             const response = await fetch('/api/admin/backup/restore', {
                 method: 'POST',
                 headers: getRequestHeaders(),
-                body: JSON.stringify({ filename, confirmRestore: 'CONFIRM_RESTORE' }),
+                body: JSON.stringify({
+                    filename,
+                    confirmRestore: 'CONFIRM_RESTORE',
+                    clearData: clearData
+                }),
             });
 
             if (!response.ok) {
@@ -1889,14 +1999,15 @@ function initScheduledTasksHandlers(template) {
             }
 
             const data = await response.json();
-            await callGenericPopup(
-                `<strong>✓ 恢复完成！</strong><br><br>
-                 恢复前的数据已备份为: <code>${data.preRestoreBackup}</code><br><br>
-                 <strong>请重启服务以应用配置更改。</strong>`,
-                POPUP_TYPE.TEXT,
-                '',
-                { okButton: '我知道了' }
-            );
+
+            await Swal.fire({
+                title: '恢复完成',
+                html: `
+                    恢复前的数据已备份为: <code>${data.preRestoreBackup}</code><br><br>
+                    <strong>请重启服务以应用配置更改。</strong>
+                `,
+                icon: 'success'
+            });
 
             await loadBackupList();
 
@@ -1910,9 +2021,14 @@ function initScheduledTasksHandlers(template) {
     template.on('click', '#createBackupBtn', createBackup);
     template.on('click', '#refreshBackupsBtn', loadBackupList);
 
-    // 切换到备份 tab 时加载列表
-    template.find('.backupRestoreButton').on('click', function () {
-        setTimeout(loadBackupList, 100); // 延迟加载，确保 tab 切换完成
+    // 初始化列表
+    if (template.find('.backupRestoreButton').hasClass('active')) {
+        loadBackupList();
+    }
+
+    // 切换到备份 tab 时加载列表 (使用 off 防止重复绑定)
+    template.find('.backupRestoreButton').off('click.backup').on('click.backup', function () {
+        setTimeout(loadBackupList, 100);
     });
 }
 

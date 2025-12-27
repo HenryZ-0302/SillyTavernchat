@@ -271,12 +271,43 @@ router.post('/restore', async (req, res) => {
         // 解压备份
         console.log(color.blue(`[Backup] 解压备份文件...`));
 
+        // 3. 如果启用了 clearData，执行安全清空
+        if (req.body.clearData === true) {
+            console.log(color.yellow(`[Backup] 用户选择清空模式，正在清除旧数据...`));
+
+            // 白名单：绝对不能删的文件/目录
+            const WHITELIST = [
+                BACKUPS_DIR, // 备份目录
+                '.git',
+                'node_modules',
+                'package.json',
+                'package-lock.json',
+                'config.yaml', // 配置文件保留，解压时如果 zip 里有会覆盖
+                'public', // 前端静态文件，一般不建议删，除非确定 zip 里包含完整的 public
+                'src',    // 源代码
+            ];
+
+            const entries = fs.readdirSync(dataRoot);
+            for (const entry of entries) {
+                // 如果在白名单里，跳过
+                if (WHITELIST.includes(entry)) continue;
+
+                const entryPath = path.join(dataRoot, entry);
+                try {
+                    fs.rmSync(entryPath, { recursive: true, force: true });
+                } catch (e) {
+                    console.warn(color.red(`[Backup] 无法删除 ${entry}: ${e.message}`));
+                }
+            }
+        }
+
         // 使用 unzipper 解析 zip 内容
         const unzipperImport = await import('unzipper');
         const unzipper = unzipperImport.default || unzipperImport;
         const directory = await unzipper.Open.file(backupPath);
 
         for (const file of directory.files) {
+            // ... (keep existing logic)
             // 跳过备份目录本身
             if (file.path.startsWith(BACKUPS_DIR)) continue;
 
@@ -316,5 +347,50 @@ router.post('/restore', async (req, res) => {
     } catch (error) {
         console.error(color.red('[Backup] 恢复备份失败:'), error);
         res.status(500).json({ error: `恢复备份失败: ${error.message}` });
+    }
+});
+
+/**
+ * POST /api/admin/backup/cleanup
+ * 清理过期备份
+ */
+router.post('/cleanup', async (req, res) => {
+    try {
+        const days = parseInt(req.body.days) || 30; // 默认30天
+        const backupsDir = getBackupsDir();
+        const files = fs.readdirSync(backupsDir);
+
+        const now = Date.now();
+        const MAX_AGE = days * 24 * 60 * 60 * 1000;
+
+        let deletedCount = 0;
+        let releasedBytes = 0;
+
+        for (const file of files) {
+            // 只处理 zip 文件
+            if (!file.endsWith('.zip')) continue;
+
+            const filePath = path.join(backupsDir, file);
+            const stat = fs.statSync(filePath);
+
+            // 如果文件修改时间超过指定天数
+            if (now - stat.mtimeMs > MAX_AGE) {
+                fs.unlinkSync(filePath);
+                deletedCount++;
+                releasedBytes += stat.size;
+                console.log(color.yellow(`[Backup] 自动清理过期备份: ${file}`));
+            }
+        }
+
+        res.json({
+            success: true,
+            deletedCount,
+            releasedBytes,
+            message: `已清理 ${deletedCount} 个过期备份`
+        });
+
+    } catch (error) {
+        console.error(color.red('[Backup] 清理过期备份失败:'), error);
+        res.status(500).json({ error: `清理失败: ${error.message}` });
     }
 });

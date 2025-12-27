@@ -953,14 +953,25 @@
                 <p style="opacity: 0.8; font-size: 0.9em; margin-bottom: 15px;">
                     一键备份所有数据，包括用户数据、论坛数据、配置文件等。
                 </p>
+                <div style="margin-bottom: 15px;">
+                    <label class="checkbox_label" title="开启后，每次创建新备份前会自动删除30天前的旧备份文件">
+                        <input type="checkbox" id="autoCleanupBackups" />
+                        <span>自动清理30天前的备份</span>
+                    </label>
+                </div>
                 <div class="flex-container flexGap10">
                     <button type="button" class="menu_button menu_button_icon" id="createBackupBtn">
-                        <i class="fa-fw fa-solid fa-download"></i>
+                        <i class="fa-fw fa-solid fa-file-zipper"></i>
                         <span>创建备份</span>
                     </button>
                     <button type="button" class="menu_button menu_button_icon" id="refreshBackupsBtn">
                         <i class="fa-fw fa-solid fa-refresh"></i>
                         <span>刷新列表</span>
+                    </button>
+                    <button type="button" class="menu_button menu_button_icon" id="cleanOldBackupsBtn"
+                        title="立即清理30天前的备份">
+                        <i class="fa-fw fa-solid fa-broom"></i>
+                        <span>立即清理</span>
                     </button>
                 </div>
                 <div id="createBackupStatus" style="margin-top: 10px; display: none;"></div>
