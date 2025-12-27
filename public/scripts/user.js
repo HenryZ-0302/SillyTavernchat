@@ -1930,56 +1930,53 @@ function initScheduledTasksHandlers(template) {
      * 恢复备份
      */
     async function restoreBackup(filename) {
-        // 使用 SweetAlert2 自定义 HTML 来提供“清空模式”选项
-        const result = await Swal.fire({
-            title: '恢复备份',
-            html: `
-                <div style="text-align: left; font-size: 0.95em;">
-                    <p><strong>即将恢复:</strong> <code>${filename}</code></p>
-                    <div style="background: var(--SmartThemeBlurTintColor); padding: 10px; border-radius: 5px; margin: 10px 0;">
-                        <label class="checkbox_label">
-                            <input type="checkbox" id="swal-input-cleardata">
-                            <span style="font-weight: bold; color: #dc3545;">清空模式 (Clean Restore)</span>
-                        </label>
-                        <p style="margin: 5px 0 0 25px; font-size: 0.85em; opacity: 0.8;">
-                            勾选后，会在恢复前<b>清空所有现有数据</b>。<br>
-                            未勾选则仅覆盖同名文件 (默认安全模式)。
-                        </p>
-                    </div>
-                    <p style="margin-top: 10px; font-style: italic; opacity: 0.7;">
-                        * 无论选哪种模式，系统都会先自动备份当前数据。
-                    </p>
-                </div>
-            `,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: '开始恢复',
-            cancelButtonText: '取消',
-            focusConfirm: false,
-            preConfirm: () => {
-                return {
-                    clearData: document.getElementById('swal-input-cleardata').checked
-                }
+        // 使用 ST 原生 Popup 替代 SweetAlert2
+        const popup = new Popup(
+            `确定要恢复备份文件 <code>${filename}</code> 吗？<br><br>
+            <div style="background: var(--SmartThemeBlurTintColor); padding: 10px; border-radius: 5px; margin: 10px 0;">
+                <p style="margin: 0; font-size: 0.9em;">
+                    <i class="fa-solid fa-triangle-exclamation"></i> <strong>警告：</strong> 
+                    恢复操作需要重启服务。
+                </p>
+            </div>`,
+            POPUP_TYPE.CONFIRM,
+            '',
+            {
+                okButton: '恢复',
+                cancelButton: '取消',
+                customInputs: [
+                    {
+                        id: 'cleanRestore',
+                        label: '开启清空模式 (Clean Restore)',
+                        type: 'checkbox',
+                        tooltip: '危险：先清空当前所有数据（白名单除外）再恢复。仅在备份可信时使用。',
+                        defaultState: false
+                    }
+                ]
             }
-        });
+        );
 
-        if (!result.isConfirmed) return;
+        const result = await popup.show();
+        if (result !== POPUP_RESULT.AFFIRMATIVE) return;
 
-        const clearData = result.value.clearData;
+        // 获取 checkbox 状态
+        const cleanRestore = popup.inputResults.get('cleanRestore');
 
-        // 二次确认，如果是清空模式
-        if (clearData) {
-            const doubleConfirm = await Swal.fire({
-                title: '最终确认',
-                text: '您选择了“清空模式”。现有数据将被全部清除（已自动备份）。确定要继续吗？',
-                icon: 'error',
-                showCancelButton: true,
-                confirmButtonText: '确定清空并恢复',
-                cancelButtonText: '取消'
-            });
-            if (!doubleConfirm.isConfirmed) return;
+        // 如果开启了清空模式，进行二次确认
+        if (cleanRestore) {
+            const doubleConfirm = await callGenericPopup(
+                `<h3><i class="fa-solid fa-radiation" style="color: #dc3545;"></i> 最终确认</h3>
+                <p>你选择了 <strong>清空模式</strong>。</p>
+                <p>这将 <span style="color: #dc3545; font-weight: bold;">删除所有现有数据</span>（config.yaml 等除外），然后从备份恢复。</p>
+                <p>确定要继续吗？此操作不可逆！</p>`,
+                POPUP_TYPE.CONFIRM,
+                '',
+                { okButton: '确定清空并恢复', cancelButton: '我后悔了' }
+            );
+            if (doubleConfirm !== POPUP_RESULT.AFFIRMATIVE) return;
         }
 
+        const clearData = cleanRestore;
         toastr.info('正在恢复备份，请稍候...');
 
         try {
