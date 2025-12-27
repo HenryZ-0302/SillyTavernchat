@@ -78,8 +78,9 @@ router.post('/create', async (req, res) => {
         const entries = fs.readdirSync(dataRoot);
 
         for (const entry of entries) {
-            // 跳过备份目录本身
+            // 跳过备份目录本身和 config 目录（config 会单独添加）
             if (entry === BACKUPS_DIR) continue;
+            if (entry === 'config') continue; // 避免重复，config.yaml 会从根目录单独添加
 
             const entryPath = path.join(dataRoot, entry);
             const stat = fs.statSync(entryPath);
@@ -92,9 +93,20 @@ router.post('/create', async (req, res) => {
         }
 
         // 如果 config.yaml 在项目根目录，也添加进去
+        // 注意：可能是符号链接，需要读取实际内容
         const configPath = path.join(process.cwd(), 'config.yaml');
         if (fs.existsSync(configPath)) {
-            archive.file(configPath, { name: 'config.yaml' });
+            // 读取实际内容（处理符号链接的情况）
+            const realConfigPath = fs.realpathSync(configPath);
+            const configContent = fs.readFileSync(realConfigPath, 'utf8');
+
+            // 验证内容有效性
+            if (configContent && configContent.trim().length > 0) {
+                archive.append(configContent, { name: 'config.yaml' });
+                console.log(color.blue(`[Backup] 已添加 config.yaml (来源: ${realConfigPath})`));
+            } else {
+                console.warn(color.yellow(`[Backup] config.yaml 内容为空，跳过`));
+            }
         }
 
         await archive.finalize();
