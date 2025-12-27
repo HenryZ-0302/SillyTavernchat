@@ -1768,15 +1768,14 @@ function initScheduledTasksHandlers(template) {
                 }
 
                 html += `
-                    <div class="list-group-item" style="padding: 10px; border-bottom: 1px solid var(--SmartThemeBorderColor); text-align: center;">
-                        <div style="display: inline-flex; align-items: center; gap: 15px; flex-wrap: wrap; justify-content: center;">
-                            <div style="text-align: left;">
-                                <div class="flex-container alignItemsCenter flexGap5">
-                                    <strong>${backup.filename}</strong>
-                                    ${typeBadge}
-                                </div>
-                                <small style="opacity: 0.7;">${date} | ${size}</small>
+                    <div class="list-group-item flex-container justifyContentSpaceBetween alignItemsCenter" style="padding: 10px; border-bottom: 1px solid var(--SmartThemeBorderColor);">
+                        <div class="flex-container flexFlowColumn">
+                            <div class="flex-container alignItemsCenter flexGap5">
+                                <strong>${backup.filename}</strong>
+                                ${typeBadge}
                             </div>
+                            <small style="opacity: 0.7;">${date} | ${size}</small>
+                        </div>
                         <div class="flex-container flexGap10">
                             <a href="/api/admin/backup/download/${backup.filename}" class="menu_button menu_button_icon" title="下载" target="_blank">
                                 <i class="fa-fw fa-solid fa-download"></i>
