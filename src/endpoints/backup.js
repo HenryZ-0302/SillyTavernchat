@@ -5,6 +5,7 @@
 
 import path from 'node:path';
 import fs from 'node:fs';
+import yaml from 'yaml';
 import archiver from 'archiver';
 import express from 'express';
 
@@ -352,7 +353,7 @@ router.post('/restore', async (req, res) => {
                 let isValidConfig = false;
                 try {
                     if (configContent && configContent.trim().length > 0) {
-                        const yaml = require('yaml');
+                        // const yaml = require('yaml'); // Removed: using import
                         const parsed = yaml.parse(configContent);
                         isValidConfig = parsed && typeof parsed === 'object';
                     }
