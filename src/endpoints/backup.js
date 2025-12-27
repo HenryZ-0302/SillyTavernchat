@@ -78,9 +78,10 @@ router.post('/create', async (req, res) => {
         const entries = fs.readdirSync(dataRoot);
 
         for (const entry of entries) {
-            // 跳过备份目录本身和 config 目录（config 会单独添加）
+            // 跳过备份目录本身
             if (entry === BACKUPS_DIR) continue;
-            if (entry === 'config') continue; // 避免重复，config.yaml 会从根目录单独添加
+            // 跳过所有 config 相关的文件和目录（会从根目录单独添加）
+            if (entry === 'config' || entry === 'config.yaml') continue;
 
             const entryPath = path.join(dataRoot, entry);
             const stat = fs.statSync(entryPath);
