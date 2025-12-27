@@ -1930,43 +1930,48 @@ function initScheduledTasksHandlers(template) {
      * 恢复备份
      */
     async function restoreBackup(filename) {
-        // 使用 ST 原生 Popup 替代 SweetAlert2
+        // 使用 ST 原生 Popup，提供两个按钮选择恢复模式
         const popup = new Popup(
             `确定要恢复备份文件 <code>${filename}</code> 吗？<br><br>
             <div style="background: var(--SmartThemeBlurTintColor); padding: 10px; border-radius: 5px; margin: 10px 0;">
                 <p style="margin: 0; font-size: 0.9em;">
-                    <i class="fa-solid fa-triangle-exclamation"></i> <strong>警告：</strong> 
-                    恢复操作需要重启服务。
+                    <i class="fa-solid fa-triangle-exclamation"></i> <strong>注意：</strong> 
+                    恢复操作需要重启服务。请选择恢复模式：
                 </p>
+                <ul style="margin: 5px 0 0 20px; font-size: 0.85em; opacity: 0.9;">
+                    <li><strong>普通恢复：</strong> 覆盖现有文件（推荐）</li>
+                    <li><strong>清空恢复：</strong> 先删除所有数据再恢复（修复严重问题用）</li>
+                </ul>
             </div>`,
             POPUP_TYPE.CONFIRM,
             '',
             {
-                okButton: '恢复',
+                okButton: '普通恢复 (覆盖)',
                 cancelButton: '取消',
-                customInputs: [
+                customButtons: [
                     {
-                        id: 'cleanRestore',
-                        label: '开启清空模式 (Clean Restore)',
-                        type: 'checkbox',
-                        tooltip: '危险：先清空当前所有数据（白名单除外）再恢复。仅在备份可信时使用。',
-                        defaultState: false
+                        text: '💥 清空并恢复',
+                        appendAtEnd: true,
+                        result: 'clean_restore',
+                        classes: ['menu_button_error'] // 红色警告样式
                     }
                 ]
             }
         );
 
         const result = await popup.show();
-        if (result !== POPUP_RESULT.AFFIRMATIVE) return;
 
-        // 获取 checkbox 状态
-        const cleanRestore = popup.inputResults.get('cleanRestore');
+        if (result !== POPUP_RESULT.AFFIRMATIVE && result !== 'clean_restore') {
+            return;
+        }
+
+        const cleanRestore = (result === 'clean_restore');
 
         // 如果开启了清空模式，进行二次确认
         if (cleanRestore) {
             const doubleConfirm = await callGenericPopup(
                 `<h3><i class="fa-solid fa-radiation" style="color: #dc3545;"></i> 最终确认</h3>
-                <p>你选择了 <strong>清空模式</strong>。</p>
+                <p>你点击了 <strong>清空并恢复</strong>。</p>
                 <p>这将 <span style="color: #dc3545; font-weight: bold;">删除所有现有数据</span>（config.yaml 等除外），然后从备份恢复。</p>
                 <p>确定要继续吗？此操作不可逆！</p>`,
                 POPUP_TYPE.CONFIRM,
