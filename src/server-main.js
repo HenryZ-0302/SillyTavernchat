@@ -276,9 +276,11 @@ app.use(express.static(path.join(serverDirectory, 'public'), {
         if (filePath.match(/\.(js|css|woff|woff2|ttf|svg|png|jpg|jpeg|gif|ico)$/)) {
             res.setHeader('Cache-Control', 'public, max-age=86400, must-revalidate'); // 1 天
         }
-        // 对于 HTML 文件，使用较短的缓存或协商缓存
+        // 对于 HTML 文件，禁用缓存，确保用户总是获取最新版本
         if (filePath.match(/\.html$/)) {
-            res.setHeader('Cache-Control', 'public, max-age=3600, must-revalidate'); // 1 小时
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+            res.setHeader('Pragma', 'no-cache');
+            res.setHeader('Expires', '0');
         }
     },
 }));
