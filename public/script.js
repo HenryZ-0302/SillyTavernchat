@@ -249,7 +249,7 @@ import { initTextGenModels } from './scripts/textgen-models.js';
 import { appendFileContent, hasPendingFileAttachment, populateFileAttachment, decodeStyleTags, encodeStyleTags, isExternalMediaAllowed, preserveNeutralChat, restoreNeutralChat, formatCreatorNotes, initChatUtilities, addDOMPurifyHooks } from './scripts/chats.js';
 import { getPresetManager, initPresetManager } from './scripts/preset-manager.js';
 import { evaluateMacros, getLastMessageId, initMacros } from './scripts/macros.js';
-import { currentUser, setUserControls } from './scripts/user.js';
+import { currentUser, setUserControls } from './scripts/user.js?v=fixed_restore';
 import { POPUP_RESULT, POPUP_TYPE, Popup, callGenericPopup, fixToastrForDialogs } from './scripts/popup.js';
 import { renderTemplate, renderTemplateAsync } from './scripts/templates.js';
 import { initScrapers } from './scripts/scrapers.js';
@@ -740,7 +740,7 @@ $.ajaxPrefilter((options, originalOptions, xhr) => {
  */
 function setupFetchInterceptor() {
     const originalFetch = window.fetch;
-    window.fetch = async function(...args) {
+    window.fetch = async function (...args) {
         const response = await originalFetch.apply(this, args);
 
         // 克隆响应以便可以多次读取
@@ -800,7 +800,7 @@ export async function pingServer() {
 
 //MARK: firstLoadInit
 async function firstLoadInit() {
- // 设置全局fetch拦截器，处理用户过期
+    // 设置全局fetch拦截器，处理用户过期
     setupFetchInterceptor();
     try {
         const tokenResponse = await fetch('/csrf-token');
