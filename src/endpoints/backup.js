@@ -396,7 +396,6 @@ router.post('/restore', async (req, res) => {
             try {
                 const content = fs.readFileSync(configPath, 'utf8');
                 if (!content || content.trim().length === 0) return false;
-                const yaml = require('yaml');
                 const parsed = yaml.parse(content);
                 return parsed && typeof parsed === 'object';
             } catch {
