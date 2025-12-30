@@ -1214,6 +1214,8 @@ async function openAdminPanel() {
             const userBlock = template.find('.userAccountTemplate .userAccount').clone();
             userBlock.find('.userName').text(user.name);
             userBlock.find('.userHandle').text(user.handle);
+            const userEmail = user.email || '';
+            userBlock.find('.userEmail').text(userEmail);
             userBlock.find('.userStatus').text(user.enabled ? 'Enabled' : 'Disabled');
             userBlock.find('.userRole').text(user.admin ? 'Admin' : 'User');
             userBlock.find('.avatar img').attr('src', user.avatar);
@@ -1482,7 +1484,7 @@ async function openAdminPanel() {
 
 /**
  * 初始化定时任务处理器
- * @param {jQuery} template - 模板jQuery对象
+ * @param {JQuery<HTMLElement>} template - 模板jQuery对象
  */
 function initScheduledTasksHandlers(template) {
     const enabledCheckbox = template.find('#scheduledClearBackupsEnabled');
