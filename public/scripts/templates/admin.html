@@ -21,6 +21,9 @@
         <button type="button" class="oauthConfigButton menu_button menu_button_icon" data-target-tab="oauthConfigBlock">
             <h4 data-i18n="OAuth Config">OAuth配置</h4>
         </button>
+        <button type="button" class="defaultConfigButton menu_button menu_button_icon" data-target-tab="defaultConfigBlock">
+            <h4 data-i18n="Default Config">默认配置</h4>
+        </button>
     </nav>
 
     <div class="userAccountTemplate template_element">
@@ -855,6 +858,143 @@
                         <li>建议在生产环境使用 HTTPS 以确保安全性</li>
                     </ul>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 默认配置选项卡 -->
+    <div class="navTab defaultConfigBlock" style="display: none;">
+        <div class="flex-container flexFlowColumn flexGap10">
+            <h3 data-i18n="Default User Template">默认用户配置模板</h3>
+
+            <div class="defaultConfigStatusBox" id="defaultConfigStatus">
+                正在加载默认配置状态...
+            </div>
+
+            <div class="flex-container flexGap10">
+                <button type="button" class="menu_button menu_button_icon" id="refreshDefaultConfigStatus">
+                    <i class="fa-fw fa-solid fa-sync"></i>
+                    <span data-i18n="Refresh">刷新状态</span>
+                </button>
+                <button type="button" class="menu_button menu_button_icon warning" id="clearDefaultConfig">
+                    <i class="fa-fw fa-solid fa-trash"></i>
+                    <span data-i18n="Clear">清空模板</span>
+                </button>
+            </div>
+
+            <div class="defaultConfigSection">
+                <h4>从现有用户生成模板</h4>
+                <div class="flex-container flexGap10 alignItemsCenter">
+                    <span style="min-width: 90px;">来源用户:</span>
+                    <select id="defaultConfigSourceUser" class="text_pole flex1"></select>
+                    <button type="button" class="menu_button menu_button_icon" id="reloadDefaultConfigUsers">
+                        <i class="fa-fw fa-solid fa-rotate"></i>
+                        <span>刷新</span>
+                    </button>
+                </div>
+
+                <div class="defaultConfigCategories">
+                    <div class="defaultConfigCategoryGroup">
+                        <h5>核心</h5>
+                        <label class="checkbox_label">
+                            <input type="checkbox" class="defaultConfigCategory" value="settings" checked>
+                            <span>设置 (settings.json)</span>
+                        </label>
+                        <label class="checkbox_label">
+                            <input type="checkbox" class="defaultConfigCategory" value="secrets">
+                            <span>API 密钥 (secrets.json)</span>
+                        </label>
+                    </div>
+
+                    <div class="defaultConfigCategoryGroup">
+                        <h5>预设</h5>
+                        <label class="checkbox_label">
+                            <input type="checkbox" class="defaultConfigCategory" value="context" checked>
+                            <span>上下文模板</span>
+                        </label>
+                        <label class="checkbox_label">
+                            <input type="checkbox" class="defaultConfigCategory" value="instruct" checked>
+                            <span>指令模板</span>
+                        </label>
+                        <label class="checkbox_label">
+                            <input type="checkbox" class="defaultConfigCategory" value="sysprompt" checked>
+                            <span>系统提示词</span>
+                        </label>
+                        <label class="checkbox_label">
+                            <input type="checkbox" class="defaultConfigCategory" value="reasoning">
+                            <span>推理模板</span>
+                        </label>
+                        <label class="checkbox_label">
+                            <input type="checkbox" class="defaultConfigCategory" value="quickreplies">
+                            <span>快捷回复</span>
+                        </label>
+                        <label class="checkbox_label">
+                            <input type="checkbox" class="defaultConfigCategory" value="openai_settings" checked>
+                            <span>OpenAI 预设</span>
+                        </label>
+                        <label class="checkbox_label">
+                            <input type="checkbox" class="defaultConfigCategory" value="kobold_settings">
+                            <span>KoboldAI 预设</span>
+                        </label>
+                        <label class="checkbox_label">
+                            <input type="checkbox" class="defaultConfigCategory" value="novel_settings">
+                            <span>NovelAI 预设</span>
+                        </label>
+                        <label class="checkbox_label">
+                            <input type="checkbox" class="defaultConfigCategory" value="textgen_settings">
+                            <span>TextGen 预设</span>
+                        </label>
+                        <label class="checkbox_label">
+                            <input type="checkbox" class="defaultConfigCategory" value="moving_ui">
+                            <span>布局位置 (MovingUI)</span>
+                        </label>
+                    </div>
+
+                    <div class="defaultConfigCategoryGroup">
+                        <h5>内容</h5>
+                        <label class="checkbox_label">
+                            <input type="checkbox" class="defaultConfigCategory" value="characters" checked>
+                            <span>默认角色卡</span>
+                        </label>
+                        <label class="checkbox_label">
+                            <input type="checkbox" class="defaultConfigCategory" value="worlds">
+                            <span>世界书 / Lorebook</span>
+                        </label>
+                        <label class="checkbox_label">
+                            <input type="checkbox" class="defaultConfigCategory" value="backgrounds">
+                            <span>背景图</span>
+                        </label>
+                        <label class="checkbox_label">
+                            <input type="checkbox" class="defaultConfigCategory" value="themes">
+                            <span>主题</span>
+                        </label>
+                        <label class="checkbox_label">
+                            <input type="checkbox" class="defaultConfigCategory" value="avatars">
+                            <span>用户头像</span>
+                        </label>
+                        <label class="checkbox_label">
+                            <input type="checkbox" class="defaultConfigCategory" value="assets">
+                            <span>资源文件 (assets)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="defaultConfigWarning">
+                    <i class="fa-fw fa-solid fa-triangle-exclamation"></i>
+                    <span>包含 API 密钥会写入默认模板，新用户注册后会自动继承这些密钥。</span>
+                </div>
+                <small style="opacity: 0.75;">未勾选的内容会从模板中移除。</small>
+
+                <div class="flex-container justifyCenter flexGap10" style="margin-top: 10px;">
+                    <button type="button" class="menu_button menu_button_icon" id="saveDefaultConfig">
+                        <i class="fa-fw fa-solid fa-floppy-disk"></i>
+                        <span>保存为默认配置</span>
+                    </button>
+                </div>
+
+                <small style="opacity: 0.8;">
+                    默认模板保存在 <code>data/default-template</code>，新用户注册时会自动应用。
+                </small>
             </div>
         </div>
     </div>

@@ -22,6 +22,9 @@ function initializeAdminExtensions() {
         // 绑定公告管理相关事件
         bindAnnouncementEvents();
 
+        // 绑定默认配置相关事件
+        bindDefaultConfigEvents();
+
         // 检查当前显示的选项卡并自动加载数据
         checkAndLoadCurrentTab();
     });
@@ -50,6 +53,14 @@ function checkAndLoadCurrentTab() {
         if (announcementsBlock && isElementVisible(announcementsBlock)) {
             console.log('Announcements tab is visible, loading data...');
             loadAnnouncements();
+        }
+
+        // 检查默认配置选项卡是否显示
+        const defaultConfigBlock = document.querySelector('.defaultConfigBlock');
+        if (defaultConfigBlock && isElementVisible(defaultConfigBlock)) {
+            console.log('Default config tab is visible, loading data...');
+            loadDefaultConfigStatus();
+            loadDefaultConfigUsers();
         }
     }, 100); // 稍微延迟以确保DOM完全渲染
 }
@@ -105,6 +116,14 @@ function bindTabEvents() {
     if (oauthConfigButton) {
         oauthConfigButton.addEventListener('click', function() {
             showOAuthConfigTab();
+        });
+    }
+
+    // 默认配置选项卡
+    const defaultConfigButton = document.querySelector('.defaultConfigButton');
+    if (defaultConfigButton) {
+        defaultConfigButton.addEventListener('click', function() {
+            showDefaultConfigTab();
         });
     }
 }
@@ -2599,6 +2618,238 @@ async function saveOAuthConfiguration() {
     } finally {
         saveButton.prop('disabled', false);
         saveButton.html(originalText);
+    }
+}
+
+// ============================================================
+// 默认配置模板管理
+// ============================================================
+
+const DEFAULT_CONFIG_LABELS = {
+    settings: '设置',
+    secrets: 'API 密钥',
+    characters: '角色卡',
+    worlds: '世界书',
+    backgrounds: '背景图',
+    themes: '主题',
+    avatars: '用户头像',
+    assets: '资源文件',
+    instruct: '指令模板',
+    context: '上下文模板',
+    sysprompt: '系统提示词',
+    reasoning: '推理模板',
+    quickreplies: '快捷回复',
+    openai_settings: 'OpenAI 预设',
+    kobold_settings: 'KoboldAI 预设',
+    novel_settings: 'NovelAI 预设',
+    textgen_settings: 'TextGen 预设',
+    moving_ui: 'MovingUI 布局',
+};
+
+function showDefaultConfigTab() {
+    // 隐藏其他选项卡
+    hideAllTabs();
+
+    const defaultConfigBlock = document.querySelector('.defaultConfigBlock');
+    if (defaultConfigBlock) {
+        defaultConfigBlock.style.display = 'block';
+        loadDefaultConfigStatus();
+        loadDefaultConfigUsers();
+    }
+}
+
+function bindDefaultConfigEvents() {
+    $('#refreshDefaultConfigStatus').off('click').on('click', loadDefaultConfigStatus);
+    $('#reloadDefaultConfigUsers').off('click').on('click', loadDefaultConfigUsers);
+    $('#saveDefaultConfig').off('click').on('click', saveDefaultConfigSnapshot);
+    $('#clearDefaultConfig').off('click').on('click', clearDefaultConfigTemplate);
+}
+
+function formatDefaultConfigCategories(categories) {
+    if (!Array.isArray(categories) || categories.length === 0) {
+        return '无';
+    }
+    return categories.map((id) => DEFAULT_CONFIG_LABELS[id] || id).join('、');
+}
+
+async function loadDefaultConfigStatus() {
+    const statusBox = document.getElementById('defaultConfigStatus');
+    if (!statusBox) {
+        return;
+    }
+
+    statusBox.textContent = '正在加载默认配置状态...';
+
+    try {
+        const response = await fetch('/api/default-config/status', {
+            method: 'GET',
+            headers: getRequestHeaders(),
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to load default config status');
+        }
+
+        const data = await response.json();
+
+        if (!data.exists) {
+            statusBox.innerHTML = `
+                <div><strong>状态:</strong> 未配置</div>
+                <div>当前新用户仅使用内置默认内容。</div>
+            `;
+            return;
+        }
+
+        const sourceHandle = data.sourceHandle || '未知';
+        const updatedAt = data.updatedAt ? new Date(data.updatedAt).toLocaleString() : '未知';
+        const categoriesText = formatDefaultConfigCategories(data.categories);
+
+        statusBox.innerHTML = `
+            <div><strong>状态:</strong> 已配置</div>
+            <div><strong>来源用户:</strong> ${escapeHtml(sourceHandle)}</div>
+            <div><strong>更新时间:</strong> ${escapeHtml(updatedAt)}</div>
+            <div><strong>包含内容:</strong> ${escapeHtml(categoriesText)}</div>
+        `;
+    } catch (error) {
+        console.error('Error loading default config status:', error);
+        statusBox.textContent = '加载默认配置状态失败，请重试。';
+    }
+}
+
+async function loadDefaultConfigUsers() {
+    const select = document.getElementById('defaultConfigSourceUser');
+    if (!select) {
+        return;
+    }
+
+    const previousValue = select.value;
+    select.innerHTML = '<option value="">加载中...</option>';
+
+    try {
+        const response = await fetch('/api/users/get', {
+            method: 'POST',
+            headers: getRequestHeaders(),
+            body: JSON.stringify({ includeStorageSize: false }),
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to load users');
+        }
+
+        const users = await response.json();
+        users.sort((a, b) => String(a.handle).localeCompare(String(b.handle)));
+
+        const options = users.map((user) => {
+            const handle = escapeHtml(user.handle);
+            const name = escapeHtml(user.name || '');
+            const label = name ? `${handle} (${name})` : handle;
+            return `<option value="${handle}">${label}</option>`;
+        });
+
+        select.innerHTML = options.join('');
+
+        if (previousValue) {
+            select.value = previousValue;
+        } else if (users.length > 0) {
+            select.value = users[0].handle;
+        }
+    } catch (error) {
+        console.error('Error loading users for default config:', error);
+        select.innerHTML = '<option value="">加载失败</option>';
+    }
+}
+
+function getSelectedDefaultConfigCategories() {
+    const selected = [];
+    document.querySelectorAll('.defaultConfigCategory').forEach((input) => {
+        if (input.checked) {
+            selected.push(input.value);
+        }
+    });
+    return selected;
+}
+
+async function saveDefaultConfigSnapshot() {
+    const select = document.getElementById('defaultConfigSourceUser');
+    if (!select || !select.value) {
+        alert('请选择来源用户');
+        return;
+    }
+
+    const categories = getSelectedDefaultConfigCategories();
+    if (categories.length === 0) {
+        alert('请至少选择一个默认配置内容');
+        return;
+    }
+
+    if (categories.includes('secrets')) {
+        const confirmed = confirm('你选择了复制 API 密钥（secrets.json）。新用户会继承这些密钥，确定继续吗？');
+        if (!confirmed) {
+            return;
+        }
+    }
+
+    const saveButton = $('#saveDefaultConfig');
+    const originalText = saveButton.html();
+
+    try {
+        saveButton.prop('disabled', true);
+        saveButton.html('<i class="fa-fw fa-solid fa-spinner fa-spin"></i><span>保存中...</span>');
+
+        const response = await fetch('/api/default-config/snapshot', {
+            method: 'POST',
+            headers: getRequestHeaders(),
+            body: JSON.stringify({
+                handle: select.value,
+                categories,
+            }),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || '保存默认配置失败');
+        }
+
+        const result = await response.json();
+        console.log('Default config snapshot saved:', result);
+
+        await loadDefaultConfigStatus();
+        if (Array.isArray(result.missing) && result.missing.length > 0) {
+            const missingText = formatDefaultConfigCategories(result.missing);
+            alert(`默认配置已更新，但以下内容在来源用户中未找到：${missingText}`);
+        } else {
+            alert('默认配置已更新，新用户注册时会自动应用。');
+        }
+    } catch (error) {
+        console.error('Error saving default config snapshot:', error);
+        alert('保存默认配置失败: ' + error.message);
+    } finally {
+        saveButton.prop('disabled', false);
+        saveButton.html(originalText);
+    }
+}
+
+async function clearDefaultConfigTemplate() {
+    if (!confirm('确定要清空默认配置模板吗？新用户将回到系统内置默认值。')) {
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/default-config/clear', {
+            method: 'POST',
+            headers: getRequestHeaders(),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || '清空默认配置失败');
+        }
+
+        await loadDefaultConfigStatus();
+        alert('默认配置模板已清空。');
+    } catch (error) {
+        console.error('Error clearing default config template:', error);
+        alert('清空默认配置失败: ' + error.message);
     }
 }
 

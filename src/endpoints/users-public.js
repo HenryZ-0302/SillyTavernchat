@@ -8,6 +8,7 @@ import { color, Cache, getConfigValue } from '../util.js';
 import { KEY_PREFIX, getUserAvatar, toKey, getPasswordHash, getPasswordSalt, getAllUserHandles, getUserDirectories, ensurePublicDirectoriesExist, normalizeHandle } from '../users.js';
 import { validateInvitationCode, useInvitationCode, getPurchaseLink, isInvitationCodesEnabled } from '../invitation-codes.js';
 import { checkForNewContent, CONTENT_TYPES } from './content-manager.js';
+import { applyDefaultTemplateToUser } from '../default-template.js';
 import systemMonitor from '../system-monitor.js';
 import { isEmailServiceAvailable, sendVerificationCode, sendPasswordRecoveryCode } from '../email-service.js';
 
@@ -574,6 +575,7 @@ router.post('/register', async (request, response) => {
         await ensurePublicDirectoriesExist();
         const directories = getUserDirectories(newUser.handle);
         await checkForNewContent([directories], [CONTENT_TYPES.SETTINGS]);
+        applyDefaultTemplateToUser(directories);
 
         await registerLimiter.delete(ip);
         console.info('User registered successfully:', newUser.handle, 'from', ip);

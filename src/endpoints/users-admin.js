@@ -18,6 +18,7 @@ import {
     ensurePublicDirectoriesExist,
     normalizeHandle,
 } from '../users.js';
+import { applyDefaultTemplateToUser } from '../default-template.js';
 import { DEFAULT_USER } from '../constants.js';
 import systemMonitor from '../system-monitor.js';
 import { isEmailServiceAvailable, sendInactiveUserDeletionNotice } from '../email-service.js';
@@ -338,6 +339,7 @@ router.post('/create', requireAdminMiddleware, async (request, response) => {
         await ensurePublicDirectoriesExist();
         const directories = getUserDirectories(newUser.handle);
         await checkForNewContent([directories], [CONTENT_TYPES.SETTINGS]);
+        applyDefaultTemplateToUser(directories);
         return response.json({ handle: newUser.handle });
     } catch (error) {
         console.error('User create failed:', error);

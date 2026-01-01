@@ -19,6 +19,7 @@ import {
     isInvitationCodesEnabled
 } from '../invitation-codes.js';
 import { checkForNewContent, CONTENT_TYPES } from './content-manager.js';
+import { applyDefaultTemplateToUser } from '../default-template.js';
 
 export const router = express.Router();
 
@@ -653,6 +654,7 @@ async function handleOAuthLogin(request, response, provider, userData) {
             }
             // 检查并创建默认设置文件
             await checkForNewContent([directories], [CONTENT_TYPES.SETTINGS]);
+            applyDefaultTemplateToUser(directories);
         } else {
             // 更新OAuth信息
             user.oauthProvider = provider;
@@ -750,6 +752,7 @@ router.post('/verify-invitation', async (request, response) => {
         }
         // 检查并创建默认设置文件
         await checkForNewContent([directories], [CONTENT_TYPES.SETTINGS]);
+        applyDefaultTemplateToUser(directories);
 
         // 清除pending user信息
         if (request.session) {

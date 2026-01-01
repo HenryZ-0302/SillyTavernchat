@@ -56,6 +56,7 @@ import { router as publicConfigRouter } from './endpoints/public-config.js';
 import { router as emailConfigRouter } from './endpoints/email-config.js';
 import { router as oauthRouter } from './endpoints/oauth.js';
 import { router as oauthConfigRouter } from './endpoints/oauth-config.js';
+import { router as defaultConfigRouter } from './endpoints/default-config.js';
 import { router as scheduledTasksRouter } from './endpoints/scheduled-tasks.js';
 import { getConfigValue } from './util.js';
 
@@ -196,6 +197,7 @@ export function setupPrivateEndpoints(app) {
     app.use('/api/email-config', emailConfigRouter);
     app.use('/api/oauth-config', oauthConfigRouter);
     app.use('/api/system-load', systemLoadRouter);
+    app.use('/api/default-config', defaultConfigRouter);
 
     // 根据配置控制角色卡分享API路由
     const enablePublicCharacters = getConfigValue('enablePublicCharacters', true, 'boolean');
